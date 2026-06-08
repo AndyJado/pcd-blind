@@ -1,0 +1,13 @@
+# 原始数据（大文件，不参与版本控制）
+source/*.pcd
+
+# 编译产物
+scripts/build/
+method_2d/build/
+*.o
+
+# 系统文件
+.DS_Store
+
+# 产出中的大体积 PCD
+output/**/*.pcd

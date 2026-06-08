@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.5)
+project(detect_2d)
+find_package(PCL 1.14 REQUIRED COMPONENTS common io filters segmentation features search)
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
+add_executable(detect_2d detect_2d.cpp)
+target_link_libraries(detect_2d ${PCL_LIBRARIES})
