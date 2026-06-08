@@ -11,3 +11,4 @@ method_2d/build/
 
 # 产出中的大体积 PCD
 output/**/*.pcd
+.venv/

@@ -19,7 +19,7 @@
 #include <cmath>
 #include <sys/stat.h>
 
-struct Detection { float cx,cy,cz,ratio; int hi_n,lo_n,total_n; };
+struct Detection { float cx,cy,cz,ratio,compact; int hi_n,lo_n,total_n; };
 
 int main(int argc, char** argv) {
     if (argc < 3) { std::cerr<<"Usage: "<<argv[0]<<" <scene.pcd> <out_dir>\n"; return 1; }
@@ -107,8 +107,13 @@ int main(int argc, char** argv) {
         int n_plane = plane_inl->indices.size();
         bool has_plane = (n_plane > (int)(box_full->size() / 10));
 
+        float nz = 0;
+        if (has_plane && plane_cf->values.size() >= 4)
+            nz = std::abs(plane_cf->values[2]);
+        bool is_ground = has_plane && (nz > 0.7f);
+
         pcl::PointCloud<pcl::PointXYZI>::Ptr box(new pcl::PointCloud<pcl::PointXYZI>);
-        if (has_plane) {
+        if (is_ground) {
             pcl::ExtractIndices<pcl::PointXYZI> ex;
             ex.setInputCloud(box_full); ex.setIndices(plane_inl); ex.setNegative(true);
             ex.filter(*box);
@@ -116,6 +121,7 @@ int main(int argc, char** argv) {
             *box = *box_full;
         }
         if (box->size() < 200) continue;
+        if (!has_plane) continue;
 
         // k-means k=2 on intensity
         int n = box->size();
@@ -140,25 +146,64 @@ int main(int argc, char** argv) {
         int lo_n = sp, hi_n = n - sp;
 
         std::cout << "  C" << ci << " box=" << box_full->size() << " plane=" << n_plane
+                  << " nz=" << nz << (is_ground?"(G)":"(W)")
                   << " remain=" << n << " ratio=" << ratio << " lo=" << lo_n << " hi=" << hi_n;
 
-        if (ratio > ratio_min) {
+        // Z-crop + compactness on hi points
+        float z_max = -1e9;
+        for (int i = sp; i < n; i++) {
+            int j = srt[i].second;
+            if (box->points[j].z > z_max) z_max = box->points[j].z;
+        }
+        float crop_z = 1.2f * 0.2f;  // 1.2 × sphere diameter
+        float z_lo = z_max - crop_z;
+
+        pcl::PointCloud<pcl::PointXYZ>::Ptr crop_xyz(new pcl::PointCloud<pcl::PointXYZ>);
+        for (int i = sp; i < n; i++) {
+            int j = srt[i].second;
+            if (box->points[j].z >= z_lo) {
+                pcl::PointXYZ pt; pt.x=box->points[j].x; pt.y=box->points[j].y; pt.z=box->points[j].z;
+                crop_xyz->push_back(pt);
+            }
+        }
+        int crop_n = crop_xyz->size();
+
+        // 3D spatial cluster on cropped hi
+        pcl::search::KdTree<pcl::PointXYZ>::Ptr crop_tree(new pcl::search::KdTree<pcl::PointXYZ>);
+        crop_tree->setInputCloud(crop_xyz);
+        std::vector<pcl::PointIndices> hi_cl;
+        pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec2;
+        ec2.setClusterTolerance(0.10);
+        ec2.setMinClusterSize(5);
+        ec2.setMaxClusterSize(50000);
+        ec2.setSearchMethod(crop_tree); ec2.setInputCloud(crop_xyz);
+        ec2.extract(hi_cl);
+
+        int max_cl = 0;
+        for (auto& c : hi_cl) if ((int)c.indices.size() > max_cl) max_cl = c.indices.size();
+        float compact = crop_n > 0 ? (float)max_cl / crop_n : 0;
+
+        std::cout << " crop=" << crop_n << " compact=" << compact;
+
+        if (ratio > ratio_min && compact > 0.9f) {
             float hx = 0, hy = 0, hz = 0;
             for (int i = sp; i < n; i++) {
                 int j = srt[i].second;
                 hx += box->points[j].x; hy += box->points[j].y; hz += box->points[j].z;
             }
             hx /= hi_n; hy /= hi_n; hz /= hi_n;
-            detections.push_back({hx, hy, hz, ratio, hi_n, lo_n, n});
+            detections.push_back({hx, hy, hz, ratio, compact, hi_n, lo_n, n});
             std::cout << " ✓" << std::endl;
 
-            // Save box PCD (hi=255 red, lo=50 blue)
-            pcl::PointCloud<pcl::PointXYZI> save;
+            // Save PCD: red=hi-in-crop, orange=hi-below, blue=lo
             std::vector<bool> is_hi(n, false);
             for (int i = sp; i < n; i++) is_hi[srt[i].second] = true;
+            pcl::PointCloud<pcl::PointXYZI> save;
             for (int i = 0; i < n; i++) {
                 auto p = box->points[i];
-                p.intensity = is_hi[i] ? 255 : 50;
+                if (is_hi[i] && p.z >= z_lo)   p.intensity = 255;  // red
+                else if (is_hi[i])              p.intensity = 200;  // orange
+                else                            p.intensity = 50;   // blue
                 save.push_back(p);
             }
             char fn[256];
@@ -174,15 +219,16 @@ int main(int argc, char** argv) {
     std::sort(detections.begin(), detections.end(),
               [](auto& a, auto& b) { return a.ratio > b.ratio; });
     std::ofstream csv(out + "/results.csv");
-    csv << "rank,ratio,cx,cy,cz,hi_n,lo_n,total_n\n";
+    csv << "rank,ratio,compact,cx,cy,cz,hi_n,lo_n,total_n\n";
     std::cout << "\n=== Detections (" << detections.size() << ") ===" << std::endl;
     for (size_t i = 0; i < detections.size(); i++) {
         auto& d = detections[i];
-        std::cout << "  #" << i << " ratio=" << d.ratio
+        std::cout << "  #" << i << " ratio=" << d.ratio << " compact=" << d.compact
                   << " (" << d.cx << "," << d.cy << "," << d.cz << ")"
                   << " hi=" << d.hi_n << " lo=" << d.lo_n << std::endl;
-        csv << i << "," << d.ratio << "," << d.cx << "," << d.cy << "," << d.cz
-            << "," << d.hi_n << "," << d.lo_n << "," << d.total_n << "\n";
+        csv << i << "," << d.ratio << "," << d.compact << ","
+            << d.cx << "," << d.cy << "," << d.cz << ","
+            << d.hi_n << "," << d.lo_n << "," << d.total_n << "\n";
     }
     csv.close();
     std::cout << "Done. " << out << "/" << std::endl;
