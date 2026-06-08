@@ -28,11 +28,10 @@ def read_pcd(path):
 
 def main():
     dirs = [
-        ('output/白峰岭_detect_v13', 'Baifengling'),
-        ('output/庆元1_detect_v13', 'Qingyuan-1'),
-        ('output/庆元2_detect_v13', 'Qingyuan-2'),
-        ('output/庆元3_detect_v13', 'Qingyuan-3'),
-        ('output/计量院_detect_v13', 'Jiliangyuan'),
+        ('output/白峰岭_final', 'Baifengling'),
+        ('output/庆元1_final', 'Qingyuan-1'),
+        ('output/庆元2_final', 'Qingyuan-2'),
+        ('output/庆元3_final', 'Qingyuan-3'),
     ]
 
     for d, name in dirs:

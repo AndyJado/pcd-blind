@@ -3,11 +3,10 @@
 import csv, os, glob, base64
 
 datasets = [
-    ('白峰岭', 'output/白峰岭_detect_v13'),
-    ('庆元1', 'output/庆元1_detect_v13'),
-    ('庆元2', 'output/庆元2_detect_v13'),
-    ('庆元3', 'output/庆元3_detect_v13'),
-    ('计量院', 'output/计量院_detect_v13'),
+    ('Baifengling', 'output/白峰岭_final'),
+    ('Qingyuan-1', 'output/庆元1_final'),
+    ('Qingyuan-2', 'output/庆元2_final'),
+    ('Qingyuan-3', 'output/庆元3_final'),
 ]
 
 html = '''<!DOCTYPE html>
@@ -42,15 +41,16 @@ tr:hover{background:#161b22}
 <span class="step">2. 3D 聚类</span> <span class="arrow">→</span>
 <span class="step">3. 按模板取框</span> <span class="arrow">→</span>
 <span class="step">4. SAC 平面 (只删地面 nz>0.7)</span> <span class="arrow">→</span>
-<span class="step">5. k-means 双峰比 >5</span> <span class="arrow">→</span>
+<span class="step">5. k-means 双峰比 + lo≥2hi</span> <span class="arrow">→</span>
 <span class="step">6. Z-crop 紧凑度 >0.9</span> <span class="arrow">→</span>
-<span class="step">7. 输出</span>
+<span class="step">7. 三脚架角分布 >0.5</span> <span class="arrow">→</span>
+<span class="step">8. 输出</span>
 </p>
 <p style="color:#8b949e;margin-top:12px;font-size:13px">
-<b>ratio</b> = hi_mean / lo_mean（双峰分离度，阈值 5）&nbsp;&nbsp;|&nbsp;&nbsp;
-<b>compact</b> = max_cluster / crop_n（Z 窗内空间紧密度，阈值 0.9）&nbsp;&nbsp;|&nbsp;&nbsp;
-<b>l2/l3</b> = PCA 特征值比（球壳薄度，参考值）&nbsp;&nbsp;|&nbsp;&nbsp;
-<b>Z-crop</b> = hi点最高Z向下 1.2×球直径 (0.24m)
+<b>ratio</b> = hi_mean/lo_mean（白峰岭>5, 庆元>2.5）&nbsp;&nbsp;|&nbsp;&nbsp;
+<b>compact</b> = Z窗内空间紧密度（>0.9）&nbsp;&nbsp;|&nbsp;&nbsp;
+<b>tripod</b> = lo点角分布3峰分 + lo≥2hi&nbsp;&nbsp;|&nbsp;&nbsp;
+<b>DBSCAN</b> 聚类, eps=0.15m min_pts=5
 </p>
 </div>
 
@@ -64,7 +64,7 @@ for name, d in datasets:
         continue
 
     html += f'<h2>{name}</h2>\n'
-    html += '<table><tr><th>#</th><th>ratio</th><th>compact</th><th>l2/l3</th><th>X</th><th>Y</th><th>Z</th><th>hi_n</th><th>lo_n</th></tr>\n'
+    html += '<table><tr><th>#</th><th>ratio</th><th>compact</th><th>tripod</th><th>X</th><th>Y</th><th>Z</th><th>hi_n</th><th>lo_n</th></tr>\n'
 
     rows = []
     with open(csv_path) as f:
@@ -77,8 +77,8 @@ for name, d in datasets:
     for row in top5:
         html += f'<tr><td>#{row["rank"]}</td><td><span class="tag tag-r">r={float(row["ratio"]):.1f}</span></td>'
         html += f'<td><span class="tag tag-c">c={float(row["compact"]):.2f}</span></td>'
-        l2 = float(row.get('l2l3', 0))
-        html += f'<td>{l2:.1f}</td>'
+        t = float(row.get('tripod', 0))
+        html += f'<td><span class="tag tag-r">t={t:.1f}</span></td>'
         html += f'<td>{float(row["cx"]):.2f}</td><td>{float(row["cy"]):.2f}</td><td>{float(row["cz"]):.2f}</td>'
         html += f'<td>{row["hi_n"]}</td><td>{row["lo_n"]}</td></tr>\n'
     html += '</table>\n'

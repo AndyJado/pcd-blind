@@ -1,0 +1,36 @@
+# detect_targets config
+# voxel = 体素降采样(m), 0=不做
+
+[default]
+pct     = 80
+ratio   = 5.0
+eps     = 0.15
+min_pts = 5
+min_clus= 100
+max_clus= 50000
+voxel   = 0
+
+[浙江省计量院]
+pct     = 80
+ratio   = 3.0
+eps     = 0.15
+min_pts = 5
+min_clus= 100
+max_clus= 50000
+voxel   = 0.04
+
+[绍兴白峰岭]
+voxel   = 0
+
+[庆元]
+voxel   = 0
+ratio   = 2.5
+
+[拓普康]
+pct     = 80
+ratio   = 5.0
+eps     = 0.10
+min_pts = 5
+min_clus= 100
+max_clus= 50000
+voxel   = 0.05
