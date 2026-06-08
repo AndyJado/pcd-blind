@@ -12,6 +12,7 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/search/kdtree.h>
 #include <pcl/common/centroid.h>
+#include <Eigen/Dense>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -19,7 +20,7 @@
 #include <cmath>
 #include <sys/stat.h>
 
-struct Detection { float cx,cy,cz,ratio,compact; int hi_n,lo_n,total_n; };
+struct Detection { float cx,cy,cz,ratio,compact,l2l3; int hi_n,lo_n,total_n; };
 
 int main(int argc, char** argv) {
     if (argc < 3) { std::cerr<<"Usage: "<<argv[0]<<" <scene.pcd> <out_dir>\n"; return 1; }
@@ -179,20 +180,44 @@ int main(int argc, char** argv) {
         ec2.setSearchMethod(crop_tree); ec2.setInputCloud(crop_xyz);
         ec2.extract(hi_cl);
 
-        int max_cl = 0;
-        for (auto& c : hi_cl) if ((int)c.indices.size() > max_cl) max_cl = c.indices.size();
+        int max_cl = 0, best_hi_cl = -1;
+        for (size_t k = 0; k < hi_cl.size(); k++)
+            if ((int)hi_cl[k].indices.size() > max_cl)
+                { max_cl = hi_cl[k].indices.size(); best_hi_cl = (int)k; }
         float compact = crop_n > 0 ? (float)max_cl / crop_n : 0;
 
-        std::cout << " crop=" << crop_n << " compact=" << compact;
+        // PCA on largest hi spatial cluster → l2/l3 (thinness)
+        float l2l3 = 1.0f;
+        if (max_cl >= 10 && best_hi_cl >= 0) {
+            auto& cl_idx = hi_cl[best_hi_cl];
+            // Build Eigen matrix
+            Eigen::MatrixXf pts(cl_idx.indices.size(), 3);
+            float mx=0,my=0,mz=0;
+            for (size_t k=0; k<cl_idx.indices.size(); k++) {
+                int idx = cl_idx.indices[k];
+                pts(k,0)=crop_xyz->points[idx].x; pts(k,1)=crop_xyz->points[idx].y; pts(k,2)=crop_xyz->points[idx].z;
+                mx+=pts(k,0); my+=pts(k,1); mz+=pts(k,2);
+            }
+            mx/=max_cl; my/=max_cl; mz/=max_cl;
+            for (int k=0; k<max_cl; k++) { pts(k,0)-=mx; pts(k,1)-=my; pts(k,2)-=mz; }
+            Eigen::Matrix3f cov = pts.transpose() * pts / max_cl;
+            Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eig(cov);
+            Eigen::Vector3f ev = eig.eigenvalues();
+            // eigenvalues are already sorted ascending, so ev(2) ≥ ev(1) ≥ ev(0)
+            float l1=ev(2), l2=ev(1), l3=ev(0);
+            l2l3 = l3 > 1e-6f ? l2 / l3 : 999;
+        }
 
-        if (ratio > ratio_min && compact > 0.9f) {
+        std::cout << " crop=" << crop_n << " compact=" << compact << " l2l3=" << l2l3;
+
+        if (ratio > ratio_min && compact > 0.9f && l2l3 > 4.0f && l2l3 < 10.0f) {
             float hx = 0, hy = 0, hz = 0;
             for (int i = sp; i < n; i++) {
                 int j = srt[i].second;
                 hx += box->points[j].x; hy += box->points[j].y; hz += box->points[j].z;
             }
             hx /= hi_n; hy /= hi_n; hz /= hi_n;
-            detections.push_back({hx, hy, hz, ratio, compact, hi_n, lo_n, n});
+            detections.push_back({hx, hy, hz, ratio, compact, l2l3, hi_n, lo_n, n});
             std::cout << " ✓" << std::endl;
 
             // Save PCD: red=hi-in-crop, orange=hi-below, blue=lo
@@ -219,14 +244,14 @@ int main(int argc, char** argv) {
     std::sort(detections.begin(), detections.end(),
               [](auto& a, auto& b) { return a.ratio > b.ratio; });
     std::ofstream csv(out + "/results.csv");
-    csv << "rank,ratio,compact,cx,cy,cz,hi_n,lo_n,total_n\n";
+    csv << "rank,ratio,compact,l2l3,cx,cy,cz,hi_n,lo_n,total_n\n";
     std::cout << "\n=== Detections (" << detections.size() << ") ===" << std::endl;
     for (size_t i = 0; i < detections.size(); i++) {
         auto& d = detections[i];
-        std::cout << "  #" << i << " ratio=" << d.ratio << " compact=" << d.compact
+        std::cout << "  #" << i << " ratio=" << d.ratio << " compact=" << d.compact << " l2l3=" << d.l2l3
                   << " (" << d.cx << "," << d.cy << "," << d.cz << ")"
                   << " hi=" << d.hi_n << " lo=" << d.lo_n << std::endl;
-        csv << i << "," << d.ratio << "," << d.compact << ","
+        csv << i << "," << d.ratio << "," << d.compact << "," << d.l2l3 << ","
             << d.cx << "," << d.cy << "," << d.cz << ","
             << d.hi_n << "," << d.lo_n << "," << d.total_n << "\n";
     }
