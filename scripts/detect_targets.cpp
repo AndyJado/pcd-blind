@@ -126,8 +126,12 @@ int main(int argc, char** argv) {
 
         pcl::PointCloud<pcl::PointXYZI>::Ptr cl(new pcl::PointCloud<pcl::PointXYZI>);
         for(auto i:idx.indices)cl->push_back(hi->points[i]);
-        Eigen::Vector4f centroid; pcl::compute3DCentroid(*cl, centroid);
-        float cx=centroid[0],cy=centroid[1],cz=centroid[2];
+        // XY geometric centroid + highest Z
+        float cx=0,cy=0;
+        for(auto&p:cl->points){cx+=p.x;cy+=p.y;}
+        cx/=cl->size();cy/=cl->size();
+        float cz=-1e9;
+        for(auto&p:cl->points)if(p.z>cz)cz=p.z;
 
         // Box from full
         pcl::PointCloud<pcl::PointXYZI>::Ptr bf(new pcl::PointCloud<pcl::PointXYZI>);
