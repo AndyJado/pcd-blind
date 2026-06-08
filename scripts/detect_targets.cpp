@@ -210,7 +210,7 @@ int main(int argc, char** argv) {
 
         std::cout << " crop=" << crop_n << " compact=" << compact << " l2l3=" << l2l3;
 
-        if (ratio > ratio_min && compact > 0.9f && l2l3 > 4.0f && l2l3 < 10.0f) {
+        if (ratio > ratio_min && compact > 0.9f) {
             float hx = 0, hy = 0, hz = 0;
             for (int i = sp; i < n; i++) {
                 int j = srt[i].second;

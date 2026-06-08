@@ -3,11 +3,11 @@
 import csv, os, glob, base64
 
 datasets = [
-    ('白峰岭', 'output/白峰岭_detect_v12'),
-    ('庆元1', 'output/庆元1_detect_v12'),
-    ('庆元2', 'output/庆元2_detect_v12'),
-    ('庆元3', 'output/庆元3_detect_v12'),
-    ('计量院', 'output/计量院_detect_v12'),
+    ('白峰岭', 'output/白峰岭_detect_v13'),
+    ('庆元1', 'output/庆元1_detect_v13'),
+    ('庆元2', 'output/庆元2_detect_v13'),
+    ('庆元3', 'output/庆元3_detect_v13'),
+    ('计量院', 'output/计量院_detect_v13'),
 ]
 
 html = '''<!DOCTYPE html>
@@ -44,13 +44,12 @@ tr:hover{background:#161b22}
 <span class="step">4. SAC 平面 (只删地面 nz>0.7)</span> <span class="arrow">→</span>
 <span class="step">5. k-means 双峰比 >5</span> <span class="arrow">→</span>
 <span class="step">6. Z-crop 紧凑度 >0.9</span> <span class="arrow">→</span>
-<span class="step">7. PCA 薄度 4&lt;l2/l3&lt;10</span> <span class="arrow">→</span>
-<span class="step">8. 输出</span>
+<span class="step">7. 输出</span>
 </p>
 <p style="color:#8b949e;margin-top:12px;font-size:13px">
 <b>ratio</b> = hi_mean / lo_mean（双峰分离度，阈值 5）&nbsp;&nbsp;|&nbsp;&nbsp;
 <b>compact</b> = max_cluster / crop_n（Z 窗内空间紧密度，阈值 0.9）&nbsp;&nbsp;|&nbsp;&nbsp;
-<b>l2/l3</b> = PCA 特征值比（球壳薄度，阈值 4-10）&nbsp;&nbsp;|&nbsp;&nbsp;
+<b>l2/l3</b> = PCA 特征值比（球壳薄度，参考值）&nbsp;&nbsp;|&nbsp;&nbsp;
 <b>Z-crop</b> = hi点最高Z向下 1.2×球直径 (0.24m)
 </p>
 </div>
