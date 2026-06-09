@@ -5,6 +5,39 @@ use std::path::Path;
 use crate::pcd::save_pcd_binary;
 use crate::types::{Detection, PointI};
 
+/// Write ALL candidates (pre-gate) for post-hoc filtering in spreadsheet.
+pub fn write_candidates_csv(detections: &[Detection], out_dir: &Path) -> anyhow::Result<()> {
+    let csv_path = out_dir.join("candidates.csv");
+    let mut f = File::create(&csv_path)?;
+
+    writeln!(
+        f,
+        "idx,ratio,compact,tripod,dxy,ground_frac,cx,cy,cz,hi_n,lo_n,total_n"
+    )?;
+
+    for (i, d) in detections.iter().enumerate() {
+        let feat = &d.features;
+        writeln!(
+            f,
+            "{},{:.4},{:.4},{:.4},{:.4},{:.4},{:.4},{:.4},{:.4},{},{},{}",
+            i,
+            feat.ratio,
+            feat.compact,
+            feat.tripod,
+            feat.dxy,
+            feat.ground_fraction,
+            d.cx,
+            d.cy,
+            d.cz,
+            feat.hi_n,
+            feat.lo_n,
+            feat.total_n,
+        )?;
+    }
+
+    Ok(())
+}
+
 /// Write detection results to CSV
 pub fn write_results_csv(detections: &[Detection], out_dir: &Path) -> anyhow::Result<()> {
     let csv_path = out_dir.join("results.csv");

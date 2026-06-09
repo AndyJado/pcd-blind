@@ -23,6 +23,8 @@ pub struct Config {
 pub struct DetectConfig {
     #[serde(default = "default_pct")]
     pub pct: f32,
+    #[serde(default = "default_ball_diameter")]
+    pub ball_diameter: f32,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -125,6 +127,7 @@ pub struct OutputConfig {
 
 // --- Default values ---
 
+fn default_ball_diameter() -> f32 { 0.2 }
 fn default_pct() -> f32 { 80.0 }
 fn default_z_start() -> f32 { 3.0 }
 fn default_z_step() -> f32 { 0.2 }

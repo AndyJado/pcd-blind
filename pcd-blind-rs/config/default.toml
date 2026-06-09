@@ -3,6 +3,7 @@
 
 [detect]
 pct = 80
+ball_diameter = 0.2
 
 [candidates]
 z_start = 3.0

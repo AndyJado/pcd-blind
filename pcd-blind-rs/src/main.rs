@@ -59,7 +59,7 @@ fn main() -> Result<()> {
     let i_threshold = intensities[pct_idx.min(intensities.len() - 1)];
     eprintln!("  I > P{} = {:.2}", cfg.detect.pct as u32, i_threshold);
 
-    eprintln!("Generating candidates (Z-slice + XY cluster)...");
+    eprintln!("Generating candidates (Z-slice + XY cluster + merge)...");
     let candidates = candidates::generate_candidates(
         &full_cloud,
         i_threshold,
@@ -68,11 +68,9 @@ fn main() -> Result<()> {
         cfg.candidates.z_end,
         cfg.candidates.cluster_tolerance,
         cfg.candidates.min_cluster_size,
-        cfg.candidates.max_cluster_size,
-        cfg.candidates.dedup_xy,
-        cfg.candidates.dedup_z,
+        cfg.detect.ball_diameter,
     );
-    eprintln!("  {} candidates after dedup", candidates.len());
+    eprintln!("  {} candidates after slice merge", candidates.len());
 
     // --- Layer 2: Recenter + Feature extraction ---
     let ground_cfg = recenter::GroundConfig {
@@ -95,7 +93,7 @@ fn main() -> Result<()> {
             &full_cloud,
             cand.cx,
             cand.cy,
-            cand.z_base,
+            cand.z_center,
             cfg.ground.cyl_radius,
             cfg.ground.box_dz_dn,
             cfg.ground.box_dz_up,
@@ -148,10 +146,13 @@ fn main() -> Result<()> {
         }
     }
 
-    // --- Layer 3: Scoring, dedup, sort ---
+    // Save all candidates (pre-gate) for post-hoc filtering
+    output::write_candidates_csv(&detections, &cli.out)?;
+
+    // Gate, score, dedup, sort
     scoring::score_and_filter(&mut detections, &cfg.features, &cfg.scoring);
 
-    // --- Output ---
+    // Save gated results
     output::write_results_csv(&detections, &cli.out)?;
     eprintln!(
         "\nDone. {} detections → {}",
