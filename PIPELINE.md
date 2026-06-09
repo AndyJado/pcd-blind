@@ -72,16 +72,10 @@
 ## 运行
 
 ```bash
-# 编译
-rsync -avz pcd-blind-rs/ mz:~/phd/pcd-blind/pcd-blind-rs/
-ssh mz "cd ~/phd/pcd-blind/pcd-blind-rs && ~/.cargo/bin/cargo build --release"
-
-# 执行
-ssh mz "cd ~/phd/pcd-blind && ./pcd-blind-rs/target/release/pcd-blind \
-  -c pcd-blind-rs/config/default.toml \
-  source/庆元陈家岭隧道1.pcd output/rust_qy1"
+# 编译 + 执行（一键）
+cd /Users/moonz/Repos/phd/pcd-blind
+mfr "cd pcd-blind-rs && ~/.cargo/bin/cargo build --release && cd .. && ./pcd-blind-rs/target/release/pcd-blind -c pcd-blind-rs/config/default.toml source/庆元陈家岭隧道1.pcd output/rust_qy1"
 
 # 查看
-rsync -avz mz:~/phd/pcd-blind/output/rust_qy1/ output/rust_qy1/
 pkill -f CloudCompare; open -a CloudCompare output/rust_qy1/match_*.pcd
 ```

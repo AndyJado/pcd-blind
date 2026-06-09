@@ -11,6 +11,7 @@ pub fn extract_features(
     box_cloud: &crate::types::BoxCloud,
     lo_indices: &[usize],
     hi_indices: &[usize],
+    ground_fraction: f32,
     cfg: &super::config::FeatureConfig,
 ) -> FeatureSet {
     let split = ratio::kmeans_split_by_index(&box_cloud.points, lo_indices, hi_indices);
@@ -27,6 +28,7 @@ pub fn extract_features(
             &box_cloud.points,
             lo_indices,
             &lo_centroid,
+            &hi_centroid,
             cfg.tripod_bins,
             cfg.tripod_peak_min_ratio,
             cfg.tripod_min_peaks,
@@ -47,6 +49,7 @@ pub fn extract_features(
         tripod: tripod_val,
         compact: compact_val,
         dxy: dxy_val,
+        ground_fraction,
         hi_n: hi_indices.len(),
         lo_n: lo_indices.len(),
         total_n: box_cloud.len(),

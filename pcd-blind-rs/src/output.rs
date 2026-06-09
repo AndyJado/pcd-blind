@@ -12,19 +12,20 @@ pub fn write_results_csv(detections: &[Detection], out_dir: &Path) -> anyhow::Re
 
     writeln!(
         f,
-        "rank,ratio,compact,tripod,dxy,score,cx,cy,cz,hi_n,lo_n,total_n"
+        "rank,ratio,compact,tripod,dxy,ground_frac,score,cx,cy,cz,hi_n,lo_n,total_n"
     )?;
 
     for (i, d) in detections.iter().enumerate() {
         let feat = &d.features;
         writeln!(
             f,
-            "{},{:.4},{:.4},{:.4},{:.4},{:.4},{:.4},{:.4},{:.4},{},{},{}",
+            "{},{:.4},{:.4},{:.4},{:.4},{:.4},{:.4},{:.4},{:.4},{:.4},{},{},{}",
             i,
             feat.ratio,
             feat.compact,
             feat.tripod,
             feat.dxy,
+            feat.ground_fraction,
             d.score,
             d.cx,
             d.cy,

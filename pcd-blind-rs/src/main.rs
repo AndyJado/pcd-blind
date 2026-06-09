@@ -108,6 +108,7 @@ fn main() -> Result<()> {
                 &r.box_cloud,
                 &r.lo_indices,
                 &r.hi_indices,
+                r.ground_fraction,
                 &cfg.features,
             );
 
@@ -134,7 +135,7 @@ fn main() -> Result<()> {
 
             let f = &detections.last().unwrap().features;
             eprintln!(
-                "  [{:3}] ({} iters, {}) ratio={:.1} tripod={:.3} compact={:.3} dxy={:.3}",
+                "  [{:3}] ({} iters, {}) ratio={:.1} tripod={:.3} compact={:.3} dxy={:.3} ground={:.2}",
                 idx,
                 r.iterations,
                 if r.converged { "ok" } else { "max" },
@@ -142,6 +143,7 @@ fn main() -> Result<()> {
                 f.tripod,
                 f.compact,
                 f.dxy,
+                f.ground_fraction,
             );
         }
     }

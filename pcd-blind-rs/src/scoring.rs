@@ -13,6 +13,7 @@ pub fn score_and_filter(
         f.ratio >= features_cfg.ratio_min
             && f.compact >= features_cfg.compact_min
             && f.dxy <= features_cfg.dxy_max_residual
+            && f.ground_fraction >= features_cfg.ground_fraction_min
     });
 
     // Compute score
@@ -21,13 +22,13 @@ pub fn score_and_filter(
         d.score = scoring_cfg.tripod_weight * f.tripod
             + scoring_cfg.ratio_weight * f.ratio
             + scoring_cfg.compact_weight * f.compact
-            + scoring_cfg.dxy_weight * f.dxy;
+            + scoring_cfg.dxy_weight * f.dxy
+            + scoring_cfg.ground_weight * f.ground_fraction;
     }
 
-    // Dedup: for detections within dedup_radius in XY+Z, keep the one with lower dxy
+    // Dedup: for detections within dedup_radius in XY+Z, keep the one with lowest dxy
     let mut i = 0;
     while i < detections.len() {
-        let mut best_j = i;
         let mut j = i + 1;
         while j < detections.len() {
             let dx = detections[i].cx - detections[j].cx;
@@ -36,28 +37,12 @@ pub fn score_and_filter(
             if dx * dx + dy * dy < scoring_cfg.dedup_radius * scoring_cfg.dedup_radius
                 && dz < scoring_cfg.dedup_z
             {
-                // Keep the one with smaller dxy
-                if detections[j].features.dxy < detections[best_j].features.dxy {
-                    best_j = j;
+                if detections[j].features.dxy < detections[i].features.dxy {
+                    detections.swap(i, j);
                 }
-            }
-            j += 1;
-        }
-        if best_j != i {
-            detections.swap(i, best_j);
-            // Remove remaining duplicates in range
-            j = i + 1;
-            while j < detections.len() {
-                let dx = detections[i].cx - detections[j].cx;
-                let dy = detections[i].cy - detections[j].cy;
-                let dz = (detections[i].cz - detections[j].cz).abs();
-                if dx * dx + dy * dy < scoring_cfg.dedup_radius * scoring_cfg.dedup_radius
-                    && dz < scoring_cfg.dedup_z
-                {
-                    detections.remove(j);
-                } else {
-                    j += 1;
-                }
+                detections.remove(j);
+            } else {
+                j += 1;
             }
         }
         i += 1;

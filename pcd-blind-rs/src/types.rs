@@ -53,6 +53,7 @@ pub struct FeatureSet {
     pub tripod: f32,
     pub compact: f32,
     pub dxy: f32,
+    pub ground_fraction: f32,
     pub hi_n: usize,
     pub lo_n: usize,
     pub total_n: usize,

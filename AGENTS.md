@@ -14,9 +14,8 @@ pcd-blind/                          (本地 & mz 双向同步 via rsync)
 
 ## 核心原则
 
-- **所有开发都在 mz 上。** Rust 代码写完 rsync 到 mz，`cargo build --release` 编译执行。
-- **不要在本地跑分析。** 本地只做代码编辑和 CloudCompare 可视化。
-- **管线跑完后自动 reopen CloudCompare。** 每次 run 后 `pkill -f CloudCompare; open -a CloudCompare output/xxx/match_*.pcd`
+- **mz 上编译执行。** `rsync` 推送代码 → `ssh mz` 编译运行 → `rsync` 回传产出。
+- **管线跑完后 reopen CloudCompare。** `pkill -f CloudCompare; open -a CloudCompare output/xxx/match_*.pcd`
 
 ## 环境
 

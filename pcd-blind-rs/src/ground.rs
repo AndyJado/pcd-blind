@@ -10,9 +10,7 @@ struct Plane {
 }
 
 /// Peel ground and walls from the cylinder box.
-///
-/// 1. Z-based ground: take lowest Z points, fit horizontal plane, remove
-/// 2. Outer-ring wall check: detect vertical planes (tunnel walls), remove
+/// Returns (cleaned_cloud, ground_fraction) where ground_fraction = removed/original.
 pub fn peel_ground(
     box_cloud: &[PointI],
     cx: f32,
@@ -23,9 +21,10 @@ pub fn peel_ground(
     ransac_iters: usize,    // e.g. 1000
     wall_nz_max: f32,       // e.g. 0.3 — |nz| below this = vertical wall
     ground_z_pct: f32,      // e.g. 0.10 — use bottom 10% of Z to find ground
-) -> Vec<PointI> {
-    if box_cloud.len() < 50 {
-        return box_cloud.to_vec();
+) -> (Vec<PointI>, f32) {
+    let original_n = box_cloud.len();
+    if original_n < 50 {
+        return (box_cloud.to_vec(), 0.0);
     }
 
     let mut keep: Vec<bool> = vec![true; box_cloud.len()];
@@ -90,12 +89,15 @@ pub fn peel_ground(
         }
     }
 
-    box_cloud
+    let cleaned: Vec<PointI> = box_cloud
         .iter()
         .enumerate()
         .filter(|(i, _)| keep[*i])
         .map(|(_, p)| *p)
-        .collect()
+        .collect();
+    let removed_n = original_n - cleaned.len();
+    let ground_fraction = removed_n as f32 / original_n as f32;
+    (cleaned, ground_fraction)
 }
 
 /// Unconstrained RANSAC plane fitting. Returns best plane regardless of orientation.

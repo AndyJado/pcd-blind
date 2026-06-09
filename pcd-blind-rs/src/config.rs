@@ -95,6 +95,8 @@ pub struct FeatureConfig {
     pub compact_min: f32,
     #[serde(default = "default_dxy_max_residual")]
     pub dxy_max_residual: f32,
+    #[serde(default = "default_ground_fraction_min")]
+    pub ground_fraction_min: f32,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -107,6 +109,8 @@ pub struct ScoringConfig {
     pub compact_weight: f32,
     #[serde(default = "default_dxy_weight")]
     pub dxy_weight: f32,
+    #[serde(default = "default_ground_weight")]
+    pub ground_weight: f32,
     #[serde(default = "default_dedup_radius")]
     pub dedup_radius: f32,
     #[serde(default = "default_dedup_z_radius")]
@@ -150,10 +154,12 @@ fn default_z_window() -> f32 { 0.24 }
 fn default_ratio_min() -> f32 { 5.0 }
 fn default_compact_min() -> f32 { 0.88 }
 fn default_dxy_max_residual() -> f32 { 0.15 }
+fn default_ground_fraction_min() -> f32 { 0.05 }
 fn default_tripod_weight() -> f32 { 4.0 }
 fn default_ratio_weight() -> f32 { 1.0 }
 fn default_compact_weight() -> f32 { 2.0 }
 fn default_dxy_weight() -> f32 { -3.0 }
+fn default_ground_weight() -> f32 { 3.0 }
 fn default_dedup_radius() -> f32 { 0.5 }
 fn default_dedup_z_radius() -> f32 { 1.0 }
 fn default_save_matches() -> bool { true }

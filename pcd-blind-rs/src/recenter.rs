@@ -22,6 +22,8 @@ pub struct RecenterResult {
     pub converged: bool,
     /// Number of iterations taken
     pub iterations: usize,
+    /// Fraction of box removed as ground
+    pub ground_fraction: f32,
 }
 
 /// Perform dxy-driven recentering loop.
@@ -58,7 +60,7 @@ pub fn recenter(
         }
 
         // Peel ground (Z-base + outer-ring wall check)
-        let box_pts = peel_ground(
+        let (box_pts, _ground_fraction) = peel_ground(
             &bf,
             cx,
             cy,
@@ -69,6 +71,8 @@ pub fn recenter(
             ground_config.wall_nz_max,
             ground_config.ground_z_pct,
         );
+
+        let ground_removed = (_ground_fraction * bf.len() as f32) as usize;
 
         if box_pts.len() < 200 {
             return None;
@@ -97,6 +101,7 @@ pub fn recenter(
                 dxy,
                 converged,
                 iterations: iter + 1,
+                ground_fraction: _ground_fraction,
             });
         }
 

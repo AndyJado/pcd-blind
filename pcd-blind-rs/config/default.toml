@@ -39,12 +39,14 @@ compact_z_window = 0.24
 ratio_min = 5.0
 compact_min = 0.88
 dxy_max_residual = 0.15
+ground_fraction_min = 0.05
 
 [scoring]
 tripod_weight = 4.0
 ratio_weight = 1.0
 compact_weight = 2.0
 dxy_weight = -3.0
+ground_weight = 3.0
 dedup_radius = 0.5
 dedup_z = 1.0
 
