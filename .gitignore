@@ -14,3 +14,4 @@ output/**/*.pcd
 .venv/
 archive/source/*.pcd
 archive/output/**/*.pcd
+output/**/*.csv

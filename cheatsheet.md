@@ -1,30 +1,29 @@
-# CloudCompare Cheatsheet
+# pcd-blind 操作速查
 
-## 着色
-- `Shift+I` — 按 intensity 着色
-- `Shift+Z` — 按 Z 坐标着色
-- `Shift+C` — 按分类着色
-- `,` / `.` — 切换色彩映射
+## 跑管线
+mfr scripts/run_detect.sh source/xxx.pcd output/xxx
 
-## 视图
-- 左键拖动 — 旋转
-- 滚轮 — 缩放
-- 中键拖动 — 平移
-- `1`/`2`/`3` — 切换正交/透视视图
-- `F` — 适配视图
+## CloudCompare
+Shift+I    按强度着色
+Shfit+Z    按Z着色
+F          适配视图
+左键拖     旋转 | 滚轮缩放 | 中键平移
 
-## 点云操作
-- 选中点云 → `Edit > Colors > Set Unique` — 统一着色
-- 选中点云 → `Properties (Alt+Enter)` — 查看点数和属性范围
-- `File > Save` — 保存为 .pcd/.ply/.bin
+## 查结果
+cat output/xxx/results.csv | head -20
+# 搜坐标附近检测 (awk)
+cat output/xxx/results.csv | awk -F, 'NR>1{d=sqrt(($6-X)^2+($7-Y)^2);if(d<2)print}'
 
-## 查看强度分布
-- 选中点云 → `Tools > Other > Compute stat. params`
-- 或 `Edit > Scalar fields > Histogram`
+## 手选点转模板
+# 在 CloudCompare 点选 → 记坐标 → 
+# 用 extract_tpls / tpl_stats 程式提取+分析
 
-## 裁剪/筛选
-- `Edit > Scalar fields > Filter by value` — 按强度范围筛选
-- 剪刀图标 — 手动裁剪
+## 单点管线分析
+# C++: bf->SAC->k-means->Zcrop->tripod
+# 验证框本身能否被管线检出
 
-## 测量
-- `Tools > Point picking` — 选点看坐标
+## 模板特征批量
+# tpl_stats.cpp: 遍历模板文件，输出 ratio/compact/tripod/dxy
+
+## 参数调整
+# 编辑 config_detect.txt，按 [数据集名] 分段设 pct/ratio/compact_min/cyl_r/z_*
