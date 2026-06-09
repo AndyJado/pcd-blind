@@ -1,0 +1,58 @@
+{
+  "bf_t1_colored": {
+    "ratio": 5.09,
+    "compact": 0.926,
+    "tripod": 0.486,
+    "dxy": 0.024,
+    "ground_fraction": 0.0
+  },
+  "bf_t2_colored": {
+    "ratio": 5.09,
+    "compact": 0.935,
+    "tripod": 0.467,
+    "dxy": 0.033,
+    "ground_fraction": 0.0
+  },
+  "bf_t3_colored": {
+    "ratio": 5.09,
+    "compact": 0.933,
+    "tripod": 0.527,
+    "dxy": 0.041,
+    "ground_fraction": 0.0
+  },
+  "bf_t4_colored": {
+    "ratio": 5.09,
+    "compact": 0.928,
+    "tripod": 0.435,
+    "dxy": 0.043,
+    "ground_fraction": 0.0
+  },
+  "qy1_t1": {
+    "ratio": 5.09,
+    "compact": 0.902,
+    "tripod": 0.0,
+    "dxy": 0.059,
+    "ground_fraction": 0.0
+  },
+  "qy3_t1": {
+    "ratio": 5.09,
+    "compact": 0.931,
+    "tripod": 0.0,
+    "dxy": 0.155,
+    "ground_fraction": 0.0
+  },
+  "qy3_t2": {
+    "ratio": 5.09,
+    "compact": 0.933,
+    "tripod": 0.0,
+    "dxy": 0.052,
+    "ground_fraction": 0.0
+  },
+  "qy3_t3": {
+    "ratio": 5.09,
+    "compact": 0.884,
+    "tripod": 0.0,
+    "dxy": 0.126,
+    "ground_fraction": 0.0
+  }
+}
