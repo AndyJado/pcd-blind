@@ -15,3 +15,6 @@ output/**/*.pcd
 archive/source/*.pcd
 archive/output/**/*.pcd
 output/**/*.csv
+
+# Rust 编译产物
+pcd-blind-rs/target/

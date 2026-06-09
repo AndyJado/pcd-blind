@@ -1,0 +1,52 @@
+# pcd-blind default configuration
+# All values shown are the defaults; omit any section to use defaults.
+
+[detect]
+pct = 80
+
+[candidates]
+z_start = 3.0
+z_step = 0.2
+z_end = -5.0
+cluster_tolerance = 0.15
+min_cluster_size = 20
+max_cluster_size = 5000
+dedup_xy = 0.3
+dedup_z = 0.3
+
+[ground]
+cyl_radius = 0.5
+box_dz_up = 0.3
+box_dz_dn = 2.0
+outer_ring_min = 0.35
+outer_ring_max = 0.5
+ransac_distance = 0.05
+ransac_iters = 1000
+wall_nz_max = 0.3
+ground_z_pct = 0.10
+
+[recenter]
+max_iters = 3
+dxy_threshold = 0.15
+
+[features]
+tripod_enabled = true
+tripod_bins = 36
+tripod_peak_min_ratio = 1.5
+tripod_min_peaks = 3
+tripod_angle_tolerance_deg = 20.0
+compact_z_window = 0.24
+ratio_min = 5.0
+compact_min = 0.88
+dxy_max_residual = 0.15
+
+[scoring]
+tripod_weight = 4.0
+ratio_weight = 1.0
+compact_weight = 2.0
+dxy_weight = -3.0
+dedup_radius = 0.5
+dedup_z = 1.0
+
+[output]
+save_matches = true

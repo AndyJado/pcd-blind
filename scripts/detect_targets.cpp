@@ -102,6 +102,12 @@ int main(int argc,char**argv){
                 // Tripod (disabled for now)
                 float tripod=0;
                 dets.push_back({hx,hy,hz_,ratio,compact,tripod,dxy,hi_n,lo_n,n});
+                // Inline dedup: near XY+Z → keep lower dxy
+                for(int d=(int)dets.size()-2;d>=0;d--)
+                    if(sqrt((dets[d].cx-hx)*(dets[d].cx-hx)+(dets[d].cy-hy)*(dets[d].cy-hy))<0.5f&&fabs(dets[d].cz-hz_)<1.0f){
+                        if(dets[d].dxy > dxy){dets[d]=dets.back();dets.pop_back();}
+                        else{dets.pop_back();break;}
+                    }
                 pcl::PointCloud<pcl::PointXYZI>sv;std::vector<bool>ih(n,false);for(int i=sp;i<n;i++)ih[srt[i].second]=true;
                 for(int i=0;i<n;i++){auto p=box->points[i];p.intensity=ih[i]?255:50;sv.push_back(p);}
                 char fn[256];snprintf(fn,sizeof(fn),"%s/match_%02d_r%.1f.pcd",out.c_str(),(int)dets.size()-1,ratio);pcl::io::savePCDFileBinary(fn,sv);
