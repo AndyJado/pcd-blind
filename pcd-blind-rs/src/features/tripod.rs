@@ -91,3 +91,60 @@ pub fn compute(
 
     spacing_score * height_ratio
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_centroid(x: f32, y: f32) -> Centroid {
+        Centroid { x, y, z: 0.0 }
+    }
+
+    #[test]
+    fn test_tripod_perfect_3_legs() {
+        // 3 legs at 0°, 120°, 240° from centroid
+        let mut points = Vec::new();
+        for leg in 0..3 {
+            let angle = (leg as f32) * 120.0_f32.to_radians();
+            let dx = angle.cos() * 0.2;
+            let dy = angle.sin() * 0.2;
+            for _ in 0..20 {
+                points.push(PointI { x: 0.0 + dx, y: 0.0 + dy, z: 0.0, intensity: 50.0 });
+            }
+        }
+        let lo: Vec<usize> = (0..60).collect();
+        let lc = make_centroid(0.0, 0.0);
+        let hc = make_centroid(0.0, 0.0);
+        let score = compute(&points, &lo, &lc, &hc, 36, 1.5, 3, 20.0);
+        assert!(score > 0.5, "perfect 3-leg tripod should score >0.5, got {}", score);
+    }
+
+    #[test]
+    fn test_tripod_single_leg() {
+        // Only 1 leg
+        let mut points = Vec::new();
+        for _ in 0..30 {
+            points.push(PointI { x: 0.2, y: 0.0, z: 0.0, intensity: 50.0 });
+        }
+        let lo: Vec<usize> = (0..30).collect();
+        let lc = make_centroid(0.0, 0.0);
+        let hc = make_centroid(0.0, 0.0);
+        let score = compute(&points, &lo, &lc, &hc, 36, 1.5, 3, 20.0);
+        assert_eq!(score, 0.0, "single leg should score 0");
+    }
+
+    #[test]
+    fn test_tripod_random_uniform() {
+        // Uniform angular distribution → no tripod
+        let mut points = Vec::new();
+        for i in 0..120 {
+            let angle = (i as f32) * 3.0_f32.to_radians();
+            points.push(PointI { x: angle.cos() * 0.2, y: angle.sin() * 0.2, z: 0.0, intensity: 50.0 });
+        }
+        let lo: Vec<usize> = (0..120).collect();
+        let lc = make_centroid(0.0, 0.0);
+        let hc = make_centroid(0.0, 0.0);
+        let score = compute(&points, &lo, &lc, &hc, 36, 1.5, 3, 20.0);
+        assert_eq!(score, 0.0, "uniform distribution should score 0, got {}", score);
+    }
+}

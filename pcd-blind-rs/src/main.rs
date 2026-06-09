@@ -1,23 +1,16 @@
-mod candidates;
-mod cluster;
-mod config;
-mod features;
-mod ground;
-mod kdtree;
-mod output;
-mod pcd;
-mod recenter;
-mod scoring;
-mod types;
-
 use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::Parser;
 
-use crate::config::Config;
-use crate::types::Detection;
-use crate::recenter::RecenterConfig;
+use pcd_blind::candidates;
+use pcd_blind::config::Config;
+use pcd_blind::features;
+use pcd_blind::output;
+use pcd_blind::pcd;
+use pcd_blind::recenter::{self, RecenterConfig};
+use pcd_blind::scoring;
+use pcd_blind::types::Detection;
 
 #[derive(Parser)]
 #[command(name = "pcd-blind")]

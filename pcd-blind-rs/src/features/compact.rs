@@ -48,3 +48,40 @@ pub fn compute(points: &[PointI], hi_indices: &[usize], z_window: f32) -> f32 {
     let sigma = (cvar / crop_n as f32).sqrt();
     1.0 / (1.0 + sigma)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_compact_perfect_sphere() {
+        // Dense cluster at same Z → compact should be high
+        let mut points = Vec::new();
+        for _ in 0..20 {
+            points.push(PointI { x: 0.0, y: 0.0, z: 0.0, intensity: 255.0 });
+        }
+        let hi: Vec<usize> = (0..20).collect();
+        let c = compute(&points, &hi, 0.24);
+        assert!(c > 0.95, "compact should be high for single-point cluster, got {}", c);
+    }
+
+    #[test]
+    fn test_compact_scattered() {
+        // Scattered points: compact should be low
+        let points = vec![
+            PointI { x: 0.0, y: 0.0, z: 0.0, intensity: 255.0 },
+            PointI { x: 1.0, y: 1.0, z: 0.2, intensity: 255.0 },
+            PointI { x: -1.0, y: -1.0, z: -0.1, intensity: 255.0 },
+        ];
+        let hi: Vec<usize> = (0..3).collect();
+        let c = compute(&points, &hi, 0.24);
+        assert!(c < 0.7, "compact should be low for scattered cluster, got {}", c);
+    }
+
+    #[test]
+    fn test_compact_empty() {
+        let points = Vec::new();
+        let hi: Vec<usize> = Vec::new();
+        assert_eq!(compute(&points, &hi, 0.24), 0.0);
+    }
+}
