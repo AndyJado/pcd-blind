@@ -18,3 +18,4 @@ output/**/*.csv
 
 # Rust 编译产物
 pcd-blind-rs/target/
+output/
