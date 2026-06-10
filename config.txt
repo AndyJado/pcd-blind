@@ -1,9 +1,0 @@
-# pcd-blind config
-# Ground: use P5 of Z distribution, cut at ground_z + ground_margin
-# Roof: cut at ground_z + roof_height
-
-ground_margin=0.1
-roof_height=4.0
-voxel=0
-cluster_tol=0.10
-ground_pct=30
