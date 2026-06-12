@@ -23,5 +23,7 @@ output/
 # pcd-blind-web runtime
 pcd-blind-web/pcd-blind-web
 pcd-blind-web/data/
-pcd-blind-web/pcd-blind-web
-
+# Embedded Rust binary (copied during make prep)
+pcd-blind-web/cmd/server/bin/
+# Don't track old web/ dir duplicate
+pcd-blind-web/web/templates/

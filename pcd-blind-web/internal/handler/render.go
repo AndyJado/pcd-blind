@@ -2,28 +2,17 @@ package handler
 
 import (
 	"html/template"
+	"io/fs"
 	"net/http"
-	"path/filepath"
 	"strings"
 )
 
 var tmpl *template.Template
 
-// InitTemplates loads templates from the given directory.
-func InitTemplates(templateDir string) error {
+// InitTemplatesFS loads templates from an embedded filesystem.
+func InitTemplatesFS(tfs fs.FS, pattern string) error {
 	tmpl = template.New("").Funcs(template.FuncMap{
 		"add": func(a, b int) int { return a + b },
-		"sub": func(a, b int) int { return a - b },
-		"dict": func(values ...any) map[string]any {
-			d := make(map[string]any, len(values)/2)
-			for i := 0; i+1 < len(values); i += 2 {
-				key, ok := values[i].(string)
-				if ok {
-					d[key] = values[i+1]
-				}
-			}
-			return d
-		},
 		"countSelected": func(sel any) int {
 			n := 0
 			if m, ok := sel.(map[int]bool); ok {
@@ -47,12 +36,11 @@ func InitTemplates(templateDir string) error {
 		},
 	})
 
-	pattern := filepath.Join(templateDir, "*.html")
-	_, err := tmpl.ParseGlob(pattern)
+	_, err := tmpl.ParseFS(tfs, pattern)
 	return err
 }
 
-// render executes the full page template (wrapping in base).
+// render executes the full page template.
 func render(w http.ResponseWriter, name string, data any) {
 	var buf strings.Builder
 	err := tmpl.ExecuteTemplate(&buf, name, data)

@@ -1,18 +1,24 @@
-.PHONY: build run clean pcd
+.PHONY: build run clean
 
 BIN ?= ../pcd-blind-rs/target/release/pcd-blind
 PORT ?= 8080
 DATA ?= ./data
 
-build:
+# Copy Rust binary and HTMX before building
+prep:
+	@mkdir -p cmd/server/bin cmd/server/web/static cmd/server/web/templates
+	@cp $(BIN) cmd/server/bin/pcd-blind 2>/dev/null || echo "WARN: pcd-blind binary not found at $(BIN)"
+	@cp web/templates/*.html cmd/server/web/templates/ 2>/dev/null || true
+	@if [ ! -f cmd/server/web/static/htmx.min.js ]; then \
+		curl -sL -o cmd/server/web/static/htmx.min.js https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js; \
+	fi
+
+build: prep
 	go build -o pcd-blind-web ./cmd/server
 
 run: build
-	./pcd-blind-web --port $(PORT) --bin $(BIN) --data $(DATA)
-
-pcd:
-	cd ../pcd-blind-rs && cargo build --release
+	./pcd-blind-web --port $(PORT) --data $(DATA)
 
 clean:
 	rm -f pcd-blind-web
-	rm -rf data/output data/params.json data/runs.json data/selections.json
+	rm -rf data/output

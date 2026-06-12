@@ -1,20 +1,21 @@
 package handler
 
 import (
+	"io/fs"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func (h *Handler) BuildRoutes() http.Handler {
+func (h *Handler) BuildRoutes(staticFS fs.FS) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	// Static files (CSS etc)
-	fileServer := http.FileServer(http.Dir("web/static"))
-	r.Handle("/static/*", http.StripPrefix("/static/", fileServer))
+	// Static files from embedded FS
+	staticSub, _ := fs.Sub(staticFS, "web/static")
+	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.FS(staticSub))))
 
 	// Home page
 	r.Get("/", h.Index)
