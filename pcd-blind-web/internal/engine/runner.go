@@ -100,9 +100,6 @@ func (r *Runner) execute(runID, srcPath, cfgPath, runDir string, progressFn func
 		ctx.NResults = c
 	}
 
-	// Post-processing: generate screenshots (best-effort)
-	r.generateScreenshots(runAbs, progressFn)
-
 	return ctx
 }
 
@@ -128,44 +125,6 @@ func countCSVRows(path string) (int, error) {
 		count++
 	}
 	return count - 1, nil // minus header
-}
-
-// generateScreenshots runs the Python render script on the run output.
-func (r *Runner) generateScreenshots(runDir string, progressFn func(string)) {
-	// Try to find the render script relative to the binary
-	exeDir := filepath.Dir(r.binPath)
-	scriptCandidates := []string{
-		filepath.Join(exeDir, "..", "scripts", "render_run.py"),
-		filepath.Join(exeDir, "..", "..", "scripts", "render_run.py"),
-		"scripts/render_run.py",
-		"../scripts/render_run.py",
-	}
-
-	var scriptPath string
-	for _, p := range scriptCandidates {
-		abs, _ := filepath.Abs(p)
-		if _, err := os.Stat(abs); err == nil {
-			scriptPath = abs
-			break
-		}
-	}
-
-	if scriptPath == "" {
-		return // Python not available, skip screenshots
-	}
-
-	progressFn("生成检测截图...")
-	cmd := exec.Command("python3", scriptPath, runDir)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		progressFn(fmt.Sprintf("截图生成失败: %v", err))
-		return
-	}
-	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
-		if line != "" {
-			progressFn(line)
-		}
-	}
 }
 
 // writeConfigTOML writes the parameters as a TOML config file.

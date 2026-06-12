@@ -24,30 +24,15 @@
         </div>
     </div>
 
-    <div class="section">
-        <h3 onclick="this.nextElementSibling.classList.toggle('open')">▶ 门控 & 评分</h3>
-        <div class="param-grid">
-            <div class="param-row"><label>Ratio 下线</label><input type="number" name="ratio_min" value="{{printf "%.1f" .Params.RatioMin}}" step="0.5"></div>
-            <div class="param-row"><label>Compact 下线</label><input type="number" name="compact_min" value="{{printf "%.3f" .Params.CompactMin}}" step="0.01"></div>
-            <div class="param-row"><label>Dxy 上限 (m)</label><input type="number" name="dxy_max" value="{{printf "%.2f" .Params.DxyMax}}" step="0.01"></div>
-            <div class="param-row"><label>Tripod 下线</label><input type="number" name="tripod_min" value="{{printf "%.2f" .Params.TripodMin}}" step="0.05"></div>
-            <div class="param-row"><label>Ground 下线</label><input type="number" name="ground_min" value="{{printf "%.2f" .Params.GroundMin}}" step="0.01"></div>
-            <div class="param-row"><label>Tripod 权重</label><input type="number" name="tripod_weight" value="{{printf "%.1f" .Params.TripodWeight}}" step="0.5"></div>
-            <div class="param-row"><label>Ratio 权重</label><input type="number" name="ratio_weight" value="{{printf "%.1f" .Params.RatioWeight}}" step="0.5"></div>
-            <div class="param-row"><label>Compact 权重</label><input type="number" name="compact_weight" value="{{printf "%.1f" .Params.CompactWeight}}" step="0.5"></div>
-            <div class="param-row"><label>Dxy 权重</label><input type="number" name="dxy_weight" value="{{printf "%.1f" .Params.DxyWeight}}" step="0.5"></div>
-            <div class="param-row"><label>Ground 权重</label><input type="number" name="ground_weight" value="{{printf "%.1f" .Params.GroundWeight}}" step="0.5"></div>
-            <div class="param-row"><label>去重 XY 半径 (m)</label><input type="number" name="dedup_radius" value="{{printf "%.1f" .Params.DedupRadius}}" step="0.1"></div>
-            <div class="param-row"><label>去重 Z (m)</label><input type="number" name="dedup_z" value="{{printf "%.1f" .Params.DedupZ}}" step="0.1"></div>
-            <div class="param-row"><label>启用 Tripod</label><input type="checkbox" name="tripod_enabled" {{if .Params.TripodEnabled}}checked{{end}}></div>
-        </div>
+    <div class="section" style="margin-top:24px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--muted)">
+        门控过滤和评分权重请在 <b>🔍 检测结果</b> 页面用滑块实时调整
     </div>
 </div>
 {{end}}
 
 {{define "run-bar"}}
 <div class="run-bar">
-    <select name="source" id="source-select" hx-get="/source-list" hx-trigger="load" hx-swap="innerHTML">
+    <select name="source" id="source-select" hx-get="/source-options" hx-trigger="load, source-updated from:body" hx-swap="innerHTML">
         <option value="">-- 选择 PCD 文件 --</option>
     </select>
     <button class="btn btn-run"

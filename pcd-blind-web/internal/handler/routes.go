@@ -29,6 +29,7 @@ func (h *Handler) BuildRoutes() http.Handler {
 	r.Post("/upload", h.UploadFile)
 	r.Delete("/source/{name}", h.DeleteSource)
 	r.Get("/source-list", h.SourceList)
+	r.Get("/source-options", h.SourceOptions)
 
 	// Params
 	r.Patch("/params", h.UpdateParams)

@@ -7,5 +7,6 @@ pub mod kdtree;
 pub mod output;
 pub mod pcd;
 pub mod recenter;
+pub mod render;
 pub mod scoring;
 pub mod types;

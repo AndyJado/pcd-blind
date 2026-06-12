@@ -147,6 +147,10 @@ fn main() -> Result<()> {
 
     // Save gated results
     output::write_results_csv(&detections, &cli.out)?;
+
+    // Render 2D projection screenshots
+    let _ = pcd_blind::render::render_screenshots(&cli.out);
+
     eprintln!(
         "\nDone. {} detections → {}",
         candidates.len(),

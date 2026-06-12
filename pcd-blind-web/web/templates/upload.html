@@ -33,3 +33,11 @@
 <div class="empty"><div class="icon">📭</div>暂无文件，上传一个 PCD 开始吧</div>
 {{end}}
 {{end}}
+
+{{define "source-options"}}
+{{if .}}
+{{range .}}<option value="{{.}}">{{.}}</option>{{end}}
+{{else}}
+<option value="">-- 暂无文件 --</option>
+{{end}}
+{{end}}

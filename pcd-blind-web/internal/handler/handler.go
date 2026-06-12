@@ -224,6 +224,9 @@ func (h *Handler) UploadFile(w http.ResponseWriter, r *http.Request) {
 
 	io.Copy(dst, f)
 
+	// Notify source dropdowns to refresh
+	w.Header().Set("HX-Trigger", "source-updated")
+
 	files := listSourceFiles(h.Store.DataDir())
 	renderPartial(w, "upload-area", map[string]any{
 		"Files": files,
@@ -249,6 +252,11 @@ func (h *Handler) SourceList(w http.ResponseWriter, r *http.Request) {
 	} else {
 		renderPartial(w, "source-list", files)
 	}
+}
+
+func (h *Handler) SourceOptions(w http.ResponseWriter, r *http.Request) {
+	files := listSourceFiles(h.Store.DataDir())
+	renderPartial(w, "source-options", files)
 }
 
 // ── Helpers ──
