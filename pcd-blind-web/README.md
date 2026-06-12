@@ -1,23 +1,6 @@
-# 标靶球检测工具
+# pcd-blind-web
 
-隧道激光点云（PCD）中标靶球自动识别。浏览器操作，单文件部署。
-
-## 使用（预编译二进制）
-
-拿到 `pcd-blind-web` 文件后：
-
-```bash
-# macOS / Linux
-chmod +x pcd-blind-web
-./pcd-blind-web --port 8080
-
-# Windows
-pcd-blind-web.exe --port 8080
-```
-
-浏览器打开 `http://localhost:8080`。
-
-所有数据（上传的 PCD、检测结果、截图）存放在 `./data/` 目录。
+标靶球检测 Web 前端。Go + HTMX，浏览器操作。
 
 ## 操作流程
 
@@ -37,46 +20,38 @@ pcd-blind-web.exe --port 8080
 | Tripod | 三脚架三腿均匀度 | ≥ 0 |
 | Ground | 地面点占比信号 | ≥ 0.05 |
 
-## 从源码构建
+## 代码结构
 
-需要 Go 1.21+ 和 Rust 工具链。
+```
+cmd/server/
+├── main.go           ← 入口，embed Rust 二进制 + 模板 + HTMX
+├── bin/              ← make prep 拷贝的 pcd-blind 二进制（gitignored）
+└── web/
+    ├── templates/    ← Go html/template（base / upload / params / results / history / runs）
+    └── static/       ← HTMX.js
 
-```bash
-# 1. 编译 Rust 管线
-cd pcd-blind-rs && cargo build --release
-
-# 2. 编译 Web 前端（embed Rust 二进制）
-cd ../pcd-blind-web
-make prep    # 下载 HTMX.js + 拷贝 pcd-blind
-make build   # 产出单文件 pcd-blind-web
-
-# 3. 运行
-./pcd-blind-web --port 8080
+internal/
+├── handler/          ← HTTP 路由 & HTMX 响应
+│   ├── routes.go     ← 路由注册
+│   ├── upload.go     ← 文件上传
+│   ├── params.go     ← 参数配置页
+│   ├── runs.go       ← 检测执行（调用 Rust 子进程）
+│   ├── results.go    ← 结果过滤 & CSV 导出
+│   └── render.go     ← 3D 截图渲染
+├── engine/
+│   ├── runner.go     ← Rust 子进程调用封装
+│   └── scorer.go     ← 打分 & 门控逻辑（Go 侧复现）
+├── store/
+│   └── store.go      ← JSON 文件持久化（runs / uploads）
+└── config/
+    └── config.go     ← 配置结构
 ```
 
-### 交叉编译
+编译时通过 `//go:embed` 将 Rust 二进制、HTML 模板、HTMX.js 全部打包为单文件。
 
-```bash
-# Linux（在 Linux 上直接 make 即可）
-make build-linux
+## 技术栈
 
-# Windows
-make build-windows
-```
-
-Linux/Windows 交叉编译需要先安装 Rust 目标：
-```bash
-rustup target add x86_64-unknown-linux-gnu
-rustup target add x86_64-pc-windows-gnu
-```
-
-## 依赖
-
-分发的二进制文件**零外部依赖**。内含：
-
-- Go Web 服务器
-- Rust pcd-blind 管线引擎
-- HTMX 前端框架
-- 全部 HTML/CSS
-
-无需安装 Python、无需联网（HTMX 已内嵌）。
+- Go 标准库 `net/http` + [chi](https://github.com/go-chi/chi) 路由
+- [HTMX](https://htmx.org) 前端交互
+- Go `html/template` 服务端渲染
+- Rust 管线作为子进程调用

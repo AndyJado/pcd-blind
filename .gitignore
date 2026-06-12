@@ -6,6 +6,9 @@ scripts/build/
 method_2d/build/
 *.o
 
+# Agent 说明书（不给外部看）
+AGENTS.md
+
 # 系统文件
 .DS_Store
 
