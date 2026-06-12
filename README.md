@@ -22,23 +22,6 @@ cd ../pcd-blind-web && make build
 
 浏览器打开 `http://localhost:8080`。
 
-### 交叉编译
-
-```bash
-# Linux（在 Linux 上 native 编译）
-make build-linux
-
-# Windows（需要 mingw 工具链）
-make build-windows
-```
-
-交叉编译需先安装 Rust 目标：
-
-```bash
-rustup target add x86_64-unknown-linux-gnu
-rustup target add x86_64-pc-windows-gnu
-```
-
 ## 项目结构
 
 ```
