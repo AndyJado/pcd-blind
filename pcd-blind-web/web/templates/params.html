@@ -1,0 +1,64 @@
+{{define "params-body"}}
+<div id="tab-params">
+    <h2 style="margin-bottom:16px">⚙ 参数配置</h2>
+
+    {{template "run-bar" .}}
+
+    <div class="section">
+        <h3 onclick="this.nextElementSibling.classList.toggle('open')">▶ 管线参数</h3>
+        <div class="param-grid open">
+            <div class="param-row"><label>强度百分比 P%</label><input type="number" name="pct" value="{{printf "%.0f" .Params.Pct}}" step="1" min="1" max="100"></div>
+            <div class="param-row"><label>标靶球直径 (m)</label><input type="number" name="ball_diameter" value="{{printf "%.1f" .Params.BallDiameter}}" step="0.05"></div>
+            <div class="param-row"><label>Z 起始 (m)</label><input type="number" name="z_start" value="{{printf "%.1f" .Params.ZStart}}" step="0.5"></div>
+            <div class="param-row"><label>Z 步长 (m)</label><input type="number" name="z_step" value="{{printf "%.1f" .Params.ZStep}}" step="0.05"></div>
+            <div class="param-row"><label>Z 终止 (m)</label><input type="number" name="z_end" value="{{printf "%.1f" .Params.ZEnd}}" step="0.5"></div>
+            <div class="param-row"><label>聚类半径 (m)</label><input type="number" name="cluster_tolerance" value="{{printf "%.2f" .Params.ClusterTol}}" step="0.01"></div>
+            <div class="param-row"><label>最小簇点数</label><input type="number" name="min_cluster_size" value="{{printf "%d" .Params.MinClusterSize}}" step="5"></div>
+            <div class="param-row"><label>圆柱半径 (m)</label><input type="number" name="cyl_radius" value="{{printf "%.1f" .Params.CylRadius}}" step="0.05"></div>
+            <div class="param-row"><label>框向上范围 (m)</label><input type="number" name="box_dz_up" value="{{printf "%.1f" .Params.BoxDzUp}}" step="0.1"></div>
+            <div class="param-row"><label>框向下范围 (m)</label><input type="number" name="box_dz_dn" value="{{printf "%.1f" .Params.BoxDzDn}}" step="0.1"></div>
+            <div class="param-row"><label>地面 Z 百分比</label><input type="number" name="ground_z_pct" value="{{printf "%.2f" .Params.GroundZPct}}" step="0.01"></div>
+            <div class="param-row"><label>墙面法向 Z 阈值</label><input type="number" name="wall_nz_max" value="{{printf "%.1f" .Params.WallNzMax}}" step="0.05"></div>
+            <div class="param-row"><label>最大迭代次数</label><input type="number" name="max_iters" value="{{printf "%d" .Params.MaxIters}}" step="1"></div>
+            <div class="param-row"><label>Dxy 收敛阈值 (m)</label><input type="number" name="dxy_threshold" value="{{printf "%.2f" .Params.DxyThreshold}}" step="0.01"></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3 onclick="this.nextElementSibling.classList.toggle('open')">▶ 门控 & 评分</h3>
+        <div class="param-grid">
+            <div class="param-row"><label>Ratio 下线</label><input type="number" name="ratio_min" value="{{printf "%.1f" .Params.RatioMin}}" step="0.5"></div>
+            <div class="param-row"><label>Compact 下线</label><input type="number" name="compact_min" value="{{printf "%.3f" .Params.CompactMin}}" step="0.01"></div>
+            <div class="param-row"><label>Dxy 上限 (m)</label><input type="number" name="dxy_max" value="{{printf "%.2f" .Params.DxyMax}}" step="0.01"></div>
+            <div class="param-row"><label>Tripod 下线</label><input type="number" name="tripod_min" value="{{printf "%.2f" .Params.TripodMin}}" step="0.05"></div>
+            <div class="param-row"><label>Ground 下线</label><input type="number" name="ground_min" value="{{printf "%.2f" .Params.GroundMin}}" step="0.01"></div>
+            <div class="param-row"><label>Tripod 权重</label><input type="number" name="tripod_weight" value="{{printf "%.1f" .Params.TripodWeight}}" step="0.5"></div>
+            <div class="param-row"><label>Ratio 权重</label><input type="number" name="ratio_weight" value="{{printf "%.1f" .Params.RatioWeight}}" step="0.5"></div>
+            <div class="param-row"><label>Compact 权重</label><input type="number" name="compact_weight" value="{{printf "%.1f" .Params.CompactWeight}}" step="0.5"></div>
+            <div class="param-row"><label>Dxy 权重</label><input type="number" name="dxy_weight" value="{{printf "%.1f" .Params.DxyWeight}}" step="0.5"></div>
+            <div class="param-row"><label>Ground 权重</label><input type="number" name="ground_weight" value="{{printf "%.1f" .Params.GroundWeight}}" step="0.5"></div>
+            <div class="param-row"><label>去重 XY 半径 (m)</label><input type="number" name="dedup_radius" value="{{printf "%.1f" .Params.DedupRadius}}" step="0.1"></div>
+            <div class="param-row"><label>去重 Z (m)</label><input type="number" name="dedup_z" value="{{printf "%.1f" .Params.DedupZ}}" step="0.1"></div>
+            <div class="param-row"><label>启用 Tripod</label><input type="checkbox" name="tripod_enabled" {{if .Params.TripodEnabled}}checked{{end}}></div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "run-bar"}}
+<div class="run-bar">
+    <select name="source" id="source-select" hx-get="/source-list" hx-trigger="load" hx-swap="innerHTML">
+        <option value="">-- 选择 PCD 文件 --</option>
+    </select>
+    <button class="btn btn-run"
+        hx-post="/runs"
+        hx-include="[name=source]"
+        hx-target="#main"
+        hx-swap="innerHTML"
+        onclick="document.querySelectorAll('#tab-nav button').forEach(b=>b.classList.remove('active'));document.querySelector('#tab-nav button:nth-child(3)').classList.add('active')"
+        _="on htmx:beforeRequest set my @disabled to 'disabled' end">
+        ▶ 开始检测
+    </button>
+    <span style="font-size:11px;color:var(--muted)">改参数后点此重新运行</span>
+</div>
+{{end}}

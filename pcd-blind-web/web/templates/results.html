@@ -1,0 +1,138 @@
+{{define "results-body"}}
+<div id="tab-results-area">
+    <h2 style="margin-bottom:16px">🔍 检测结果</h2>
+
+    {{if .ActiveRunID}}
+    <div id="run-status" class="status {{.RunStatus}}">
+        {{if eq .RunStatus "running"}}
+            <div class="spinner"></div>
+            <span style="color:var(--yellow)">⏳ 正在检测...</span>
+            <span style="font-family:monospace;font-size:12px;color:var(--muted)">{{.ActiveRunID}}</span>
+        {{else if eq .RunStatus "done"}}
+            <span style="color:var(--green)">✓ 检测完成</span>
+            <span style="font-family:monospace;font-size:12px;color:var(--muted)">{{.ActiveRunID}}</span>
+            <span style="color:var(--muted);font-size:12px">检出 {{.TotalResults}} 个标靶球</span>
+        {{else}}
+            <span style="color:var(--red)">✗ 运行失败</span>
+            <span style="font-family:monospace;font-size:12px;color:var(--muted)">{{.ActiveRunID}}</span>
+            <span style="color:var(--red);font-size:12px">{{.RunError}}</span>
+        {{end}}
+    </div>
+    {{end}}
+
+    {{if eq .RunStatus "running"}}
+    <div class="log" id="run-log"
+        hx-ext="sse"
+        sse-connect="/runs/{{.ActiveRunID}}/status"
+        sse-swap="message"
+        hx-swap="beforeend">
+    </div>
+    <script>
+    (function(){
+        var log=document.getElementById('run-log');
+        if(!log)return;
+        var src=new EventSource('/runs/{{.ActiveRunID}}/status');
+        var closed=false;
+        src.onmessage=function(e){
+            if(closed)return;
+            try{var d=JSON.parse(e.data)}catch(_){return}
+            if(d.line){log.textContent+=d.line+'\n';log.scrollTop=log.scrollHeight}
+            if(d.done){
+                closed=true;
+                src.close();
+                htmx.ajax('GET','/tab/results?run={{.ActiveRunID}}',{target:'#main',swap:'innerHTML'});
+            }
+        };
+    })();
+    </script>
+    {{end}}
+
+    {{if eq .RunStatus "done"}}
+    <div class="toolbar">
+        <div class="filter-row">
+            <div class="filter-item">
+                <label>Ratio ≥</label>
+                <span class="val">{{printf "%.1f" .FilterRatio}}</span>
+                <input type="range" name="ratio_min" min="1" max="20" step="0.5" value="{{printf "%.1f" .FilterRatio}}"
+                    hx-get="/tab/results?run={{.ActiveRunID}}" hx-trigger="change delay:200ms"
+                    hx-target="#tab-results-area" hx-swap="outerHTML" hx-include="closest .filter-row">
+            </div>
+            <div class="filter-item">
+                <label>Compact ≥</label>
+                <span class="val">{{printf "%.2f" .FilterCompact}}</span>
+                <input type="range" name="compact_min" min="0.5" max="1.0" step="0.01" value="{{printf "%.2f" .FilterCompact}}"
+                    hx-get="/tab/results?run={{.ActiveRunID}}" hx-trigger="change delay:200ms"
+                    hx-target="#tab-results-area" hx-swap="outerHTML" hx-include="closest .filter-row">
+            </div>
+            <div class="filter-item">
+                <label>Dxy ≤</label>
+                <span class="val">{{printf "%.2f" .FilterDxy}}</span>
+                <input type="range" name="dxy_max" min="0" max="0.5" step="0.01" value="{{printf "%.2f" .FilterDxy}}"
+                    hx-get="/tab/results?run={{.ActiveRunID}}" hx-trigger="change delay:200ms"
+                    hx-target="#tab-results-area" hx-swap="outerHTML" hx-include="closest .filter-row">
+            </div>
+            <div style="flex:1"></div>
+            <span id="approved-count" style="font-size:12px;color:var(--muted)"></span>
+            {{if .HasApproved}}
+            <a href="/runs/{{.ActiveRunID}}/export" class="btn btn-primary" download>📥 导出已确认</a>
+            {{end}}
+        </div>
+    </div>
+
+    <div id="gallery-area">
+        {{template "detection-gallery" .}}
+    </div>
+    {{end}}
+
+    {{if not .ActiveRunID}}
+    <div class="empty">
+        <div class="icon">🔍</div>
+        还没有检测结果<br>
+        <span style="font-size:12px">到「参数配置」页面上传文件并开始检测</span>
+    </div>
+    {{end}}
+</div>
+{{end}}
+
+{{define "detection-gallery"}}
+{{if .Detections}}
+<div class="gallery">
+    {{range .Detections}}
+    {{$approved := index $.ApprovedSet .Idx}}
+    <div class="card {{if $approved}}selected{{end}}" id="card-{{.Idx}}">
+        {{if .HasScreenshot}}
+        <img src="/runs/{{$.ActiveRunID}}/screenshot/{{.ScreenshotFile}}" alt="检测 #{{.Rank}}">
+        {{else}}
+        <div style="height:220px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:32px">📷</div>
+        {{end}}
+        <div class="card-body">
+            <div class="card-row">
+                <span style="font-weight:600">#{{.Rank}}</span>
+                <span class="card-tag tag-good">r={{printf "%.1f" .Ratio}}</span>
+                <span class="card-tag tag-warn">c={{printf "%.2f" .Compact}}</span>
+            </div>
+            <div class="card-coord" style="margin-top:4px">
+                ({{printf "%.2f" .Cx}}, {{printf "%.2f" .Cy}}, {{printf "%.2f" .Cz}})
+            </div>
+            <div class="card-actions">
+                <button class="btn-approve {{if $approved}}active{{end}}"
+                    hx-post="/runs/{{$.ActiveRunID}}/select"
+                    hx-vals='js:{idx:"{{.Idx}}",checked:{{if $approved}}false{{else}}true{{end}}}'
+                    hx-trigger="click"
+                    hx-target="#approved-count"
+                    hx-swap="innerHTML">
+                    {{if $approved}}✓ 已确认{{else}}确认此靶{{end}}
+                </button>
+            </div>
+        </div>
+    </div>
+    {{end}}
+</div>
+{{else}}
+<div class="empty">
+    <div class="icon">🎯</div>
+    当前门控条件下没有通过的检测<br>
+    <span style="font-size:12px">试试调低门槛或增大 Dxy 上限</span>
+</div>
+{{end}}
+{{end}}

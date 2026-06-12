@@ -19,3 +19,9 @@ output/**/*.csv
 # Rust 编译产物
 pcd-blind-rs/target/
 output/
+
+# pcd-blind-web runtime
+pcd-blind-web/pcd-blind-web
+pcd-blind-web/data/
+pcd-blind-web/pcd-blind-web
+

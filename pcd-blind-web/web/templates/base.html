@@ -1,0 +1,145 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标靶球检测</title>
+    <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
+    <style>
+        :root {
+            --bg: #0d1117; --surface: #161b22; --border: #30363d;
+            --text: #c9d1d9; --muted: #8b949e; --accent: #58a6ff;
+            --orange: #f0883e; --green: #3fb950; --red: #f85149; --yellow: #d2991d;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+        
+        nav.tabs{
+            display:flex;gap:0;background:var(--surface);border-bottom:1px solid var(--border);
+            padding:0 24px;position:sticky;top:0;z-index:10;
+        }
+        nav.tabs button{
+            padding:14px 24px;background:none;border:none;color:var(--muted);
+            font-size:14px;cursor:pointer;border-bottom:2px solid transparent;
+            transition:all .15s;font-family:inherit;
+        }
+        nav.tabs button:hover{color:var(--text)}
+        nav.tabs button.active{color:var(--accent);border-bottom-color:var(--accent)}
+        
+        .page{max-width:1100px;margin:0 auto;padding:24px}
+        
+        /* params */
+        .section{margin-bottom:24px}
+        .section h3{color:var(--orange);font-size:14px;margin-bottom:12px;cursor:pointer;user-select:none}
+        .section h3:hover{color:var(--accent)}
+        .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px 16px}
+        .param-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:13px}
+        .param-row label{color:var(--muted);font-size:12px;flex:1}
+        .param-row input, .param-row select{
+            width:90px;padding:4px 8px;background:var(--bg);color:var(--text);
+            border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:right;font-family:monospace
+        }
+        .param-row input:focus{border-color:var(--accent);outline:none}
+        .param-row input[type=checkbox]{width:auto;cursor:pointer}
+        
+        .btn{
+            padding:8px 20px;border-radius:6px;font-size:13px;cursor:pointer;border:none;
+            font-family:inherit;font-weight:600;transition:opacity .15s;
+        }
+        .btn:hover{opacity:.85}
+        .btn-primary{background:var(--accent);color:#fff}
+        .btn-run{background:var(--green);color:#fff}
+        .btn-danger{background:var(--red);color:#fff}
+        
+        .run-bar{
+            display:flex;align-items:center;gap:12px;padding:16px 0;flex-wrap:wrap;
+            border-bottom:1px solid var(--border);margin-bottom:20px;
+        }
+        .run-bar select{padding:6px 12px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:13px}
+        
+        .status{display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:8px;margin-bottom:16px;background:var(--surface);border:1px solid var(--border)}
+        .status.running{border-color:var(--yellow)}
+        .status.done{border-color:var(--green)}
+        .status.error{border-color:var(--red)}
+        .spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .log{font-family:monospace;font-size:11px;color:var(--muted);max-height:100px;overflow-y:auto;background:var(--bg);border-radius:4px;padding:8px;white-space:pre-wrap;margin-bottom:16px}
+        
+        /* gallery */
+        .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+        .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .2s}
+        .card:hover{border-color:var(--accent)}
+        .card.selected{border-color:var(--green);box-shadow:0 0 0 1px var(--green)}
+        .card img{width:100%;height:220px;object-fit:cover;display:block;background:var(--bg)}
+        .card-body{padding:12px}
+        .card-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px}
+        .card-coord{font-family:monospace;font-size:11px;color:var(--muted)}
+        .card-tag{display:inline-block;padding:1px 6px;border-radius:3px;font-weight:600;font-size:10px}
+        .tag-good{background:rgba(63,185,80,.15);color:var(--green)}
+        .tag-warn{background:rgba(210,153,29,.15);color:var(--yellow)}
+        
+        .card-actions{display:flex;gap:8px;margin-top:8px}
+        .card-actions button{padding:4px 12px;border-radius:4px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text)}
+        .card-actions .btn-approve{border-color:var(--green);color:var(--green)}
+        .card-actions .btn-approve.active{background:var(--green);color:#fff}
+        
+        .toolbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+        
+        /* upload */
+        .upload-area{border:2px dashed var(--border);border-radius:10px;padding:30px;text-align:center;margin-bottom:20px;transition:border-color .2s}
+        .upload-area:hover{border-color:var(--accent)}
+        .upload-area input[type=file]{margin-bottom:12px;color:var(--text)}
+        .file-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+        .file-chip{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-size:12px;font-family:monospace;display:flex;align-items:center;gap:8px}
+        .file-chip .del{cursor:pointer;color:var(--red);font-weight:bold}
+        
+        /* history */
+        .run-row{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer}
+        .run-row:hover{background:rgba(88,166,255,.05)}
+        .run-row .id{color:var(--accent);font-family:monospace}
+        .run-row .stat{font-weight:600}
+        .run-row .stat.done{color:var(--green)}
+        .run-row .stat.error{color:var(--red)}
+        .run-row .stat.running{color:var(--yellow)}
+        
+        .empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
+        .empty .icon{font-size:48px;margin-bottom:16px}
+        
+        .msg-ok{color:var(--green);font-size:12px;padding:4px 0}
+        .msg-err{color:var(--red);font-size:12px;padding:4px 0}
+        
+        .filter-row{display:flex;gap:12px;align-items:center;flex-wrap:nowrap;overflow-x:auto;padding:12px 0}
+        .filter-item{display:flex;flex-direction:column;gap:2px;font-size:11px}
+        .filter-item label{color:var(--muted)}
+        .filter-item .val{color:var(--accent);font-weight:600;font-size:12px}
+        .filter-item input[type=range]{width:100px}
+    </style>
+</head>
+<body>
+    <nav class="tabs" id="tab-nav">
+        <button hx-get="/tab/params" hx-target="#main" hx-swap="innerHTML"
+            onclick="document.querySelectorAll('#tab-nav button').forEach(b=>b.classList.remove('active'));this.classList.add('active')"
+            class="active">⚙ 参数配置</button>
+        <button hx-get="/tab/files" hx-target="#main" hx-swap="innerHTML"
+            onclick="document.querySelectorAll('#tab-nav button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">📁 文件管理</button>
+        <button hx-get="/tab/results" hx-target="#main" hx-swap="innerHTML"
+            onclick="document.querySelectorAll('#tab-nav button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">🔍 检测结果</button>
+        <button hx-get="/tab/history" hx-target="#main" hx-swap="innerHTML"
+            onclick="document.querySelectorAll('#tab-nav button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">📋 运行记录</button>
+    </nav>
+
+    <main id="main" class="page">
+        {{template "content" .}}
+    </main>
+</body>
+</html>
+{{end}}
+
+{{define "content"}}
+{{if eq .ActiveTab "files"}}{{template "files-body" .}}
+{{else if eq .ActiveTab "results"}}{{template "results-body" .}}
+{{else if eq .ActiveTab "history"}}{{template "history-body" .}}
+{{else}}{{template "params-body" .}}
+{{end}}
+{{end}}

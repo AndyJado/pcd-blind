@@ -1,0 +1,59 @@
+{{define "run-status-area"}}
+{{if .Run}}
+<div id="run-status" class="run-status {{.Run.Status}}">
+    {{template "run-card" .}}
+</div>
+{{end}}
+{{end}}
+
+{{define "run-card"}}
+{{$run := .Run}}
+<div class="status-hdr">
+    {{if eq $run.Status "running"}}
+        <div class="spinner"></div>
+        <span style="color:var(--yellow)">⏳ Running...</span>
+        <span class="id" style="color:var(--muted);font-family:monospace;font-size:12px">{{$run.ID}}</span>
+    {{else if eq $run.Status "done"}}
+        <span style="color:var(--green)">✓ Done</span>
+        <span class="id" style="color:var(--muted);font-family:monospace;font-size:12px">{{$run.ID}}</span>
+        <span style="color:var(--muted);font-size:11px">{{$run.SourceFile}}</span>
+        <span style="color:var(--muted);font-size:11px">{{$run.NCandidates}} candidates → {{$run.NResults}} results</span>
+    {{else}}
+        <span style="color:var(--red)">✗ Error</span>
+        <span class="id" style="color:var(--muted);font-family:monospace;font-size:12px">{{$run.ID}}</span>
+        <span style="color:var(--red);font-size:11px">{{$run.Error}}</span>
+    {{end}}
+</div>
+
+{{if eq $run.Status "running"}}
+<div class="log" id="run-log-{{$run.ID}}"
+    hx-ext="sse"
+    sse-connect="/runs/{{$run.ID}}/status"
+    sse-swap="message"
+    hx-swap="beforeend">
+</div>
+<script>
+(function(){
+    var log = document.getElementById('run-log-{{$run.ID}}');
+    var src = new EventSource('/runs/{{$run.ID}}/status');
+    src.onmessage = function(e) {
+        var d = JSON.parse(e.data);
+        if (d.line) {
+            log.textContent += d.line + '\n';
+            log.scrollTop = log.scrollHeight;
+        }
+        if (d.done) {
+            src.close();
+            htmx.ajax('GET', '/runs/{{$run.ID}}/card', {target:'#run-status', swap:'outerHTML'});
+            htmx.ajax('GET', '/runs/{{$run.ID}}/results', {target:'#results-area', swap:'innerHTML'});
+            htmx.ajax('GET', '/run-list', {target:'#run-history', swap:'innerHTML'});
+        }
+    };
+})();
+</script>
+{{end}}
+{{end}}
+
+{{define "log-line"}}
+<div>{{.}}</div>
+{{end}}

@@ -1,0 +1,38 @@
+{{define "history-body"}}
+<div id="tab-history">
+    <h2 style="margin-bottom:16px">📋 运行记录</h2>
+
+    <div id="run-list" hx-get="/run-list" hx-trigger="load" hx-swap="innerHTML">
+        <div class="empty"><div class="icon">📋</div>加载中...</div>
+    </div>
+</div>
+{{end}}
+
+{{define "run-list"}}
+<h3 style="font-size:13px;color:var(--muted);margin-bottom:8px">最近运行</h3>
+{{if .Runs}}
+{{range .Runs}}
+<div class="run-row"
+    hx-get="/runs/{{.ID}}/view"
+    hx-target="#main"
+    hx-swap="innerHTML"
+    style="cursor:pointer">
+    <span class="id">{{.ID}}</span>
+    <span style="color:var(--muted);font-size:12px">{{.SourceFile}}</span>
+    <span class="stat {{.Status}}">
+        {{if eq .Status "done"}}✓ {{.NResults}} 个检出
+        {{else if eq .Status "running"}}⏳ 运行中
+        {{else}}✗ 失败
+        {{end}}
+    </span>
+    <span class="del" style="cursor:pointer;color:var(--red);padding:4px"
+        hx-delete="/runs/{{.ID}}"
+        hx-target="#run-list"
+        hx-swap="outerHTML"
+        hx-confirm="确定删除此运行记录？">×</span>
+</div>
+{{end}}
+{{else}}
+<div class="empty"><div class="icon">📭</div>暂无运行记录</div>
+{{end}}
+{{end}}
