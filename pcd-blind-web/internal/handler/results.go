@@ -24,16 +24,18 @@ type DetectionCard struct {
 }
 
 // loadCandidatesForDisplay loads and gates candidates from a run's output.
-func loadCandidatesForDisplay(runDir string, ratioMin, compactMin, dxyMax float64, p config.Params) ([]engine.CandidateRow, error) {
+func loadCandidatesForDisplay(runDir string, ratioMin, compactMin, dxyMax, tripodMin, groundMin float64, p config.Params) ([]engine.CandidateRow, error) {
 	candidates, err := engine.LoadCandidates(runDir)
 	if err != nil {
 		return nil, err
 	}
-	// Override gate with requested values
-	p.RatioMin = ratioMin
-	p.CompactMin = compactMin
-	p.DxyMax = dxyMax
-	return engine.GateAndScore(candidates, p), nil
+	override := p
+	override.RatioMin = ratioMin
+	override.CompactMin = compactMin
+	override.DxyMax = dxyMax
+	override.TripodMin = tripodMin
+	override.GroundMin = groundMin
+	return engine.GateAndScore(candidates, override), nil
 }
 
 // SelectCandidate toggles approval of a candidate.

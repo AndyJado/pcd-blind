@@ -3,9 +3,11 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
+	"pcd-blind-web/internal/config"
 	"pcd-blind-web/internal/engine"
 	"pcd-blind-web/internal/store"
 )
@@ -42,7 +44,8 @@ func (h *Handler) StartRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params := h.Store.Params()
+	// Merge form values into current params
+	params := h.mergeFormParams(h.Store.Params(), r)
 	runner := engine.NewRunner(h.BinPath, h.Store.DataDir())
 
 	state := &RunState{}
@@ -206,6 +209,50 @@ func (h *Handler) pollStoreForSSE(w http.ResponseWriter, r *http.Request, runID 
 		fmt.Fprintf(w, "data: {\"line\": \"等待管线完成...\"}\n\n")
 		flusher.Flush()
 	}
+}
+
+// mergeFormParams overrides store params with values from an HTTP form.
+func (h *Handler) mergeFormParams(p config.Params, r *http.Request) config.Params {
+	getf := func(key string) *float64 {
+		v := r.FormValue(key)
+		if v == "" {
+			return nil
+		}
+		f, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return nil
+		}
+		return &f
+	}
+	geti := func(key string) *int {
+		v := r.FormValue(key)
+		if v == "" {
+			return nil
+		}
+		i, err := strconv.Atoi(v)
+		if err != nil {
+			return nil
+		}
+		return &i
+	}
+
+	if v := getf("pct"); v != nil { p.Pct = *v }
+	if v := getf("z_start"); v != nil { p.ZStart = *v }
+	if v := getf("z_step"); v != nil { p.ZStep = *v }
+	if v := getf("z_end"); v != nil { p.ZEnd = *v }
+	if v := getf("cluster_tolerance"); v != nil { p.ClusterTol = *v }
+	if v := geti("min_cluster_size"); v != nil { p.MinClusterSize = *v }
+	if v := getf("cyl_radius"); v != nil { p.CylRadius = *v }
+	if v := getf("box_dz_up"); v != nil { p.BoxDzUp = *v }
+	if v := getf("box_dz_dn"); v != nil { p.BoxDzDn = *v }
+	if v := getf("ground_z_pct"); v != nil { p.GroundZPct = *v }
+	if v := getf("wall_nz_max"); v != nil { p.WallNzMax = *v }
+	if v := geti("max_iters"); v != nil { p.MaxIters = *v }
+	if v := getf("dxy_threshold"); v != nil { p.DxyThreshold = *v }
+	if v := getf("ball_diameter"); v != nil { p.BallDiameter = *v }
+
+	h.Store.SetParams(p)
+	return p
 }
 
 func escapeJSON(s string) string {

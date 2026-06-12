@@ -5,12 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>标靶球检测</title>
-    <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
+    <script src="/static/htmx.min.js"></script>
     <style>
         :root {
-            --bg: #0d1117; --surface: #161b22; --border: #30363d;
-            --text: #c9d1d9; --muted: #8b949e; --accent: #58a6ff;
-            --orange: #f0883e; --green: #3fb950; --red: #f85149; --yellow: #d2991d;
+            --bg: #f6f8fa; --surface: #ffffff; --border: #d0d7de;
+            --text: #1f2328; --muted: #656d76; --accent: #0969da;
+            --orange: #bf5700; --green: #1a7f37; --red: #cf222e; --yellow: #9a6700;
         }
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
@@ -27,20 +27,51 @@
         nav.tabs button:hover{color:var(--text)}
         nav.tabs button.active{color:var(--accent);border-bottom-color:var(--accent)}
         
-        .page{max-width:1100px;margin:0 auto;padding:24px}
+        .page{max-width:1100px;margin:0 auto;padding:28px}
         
         /* params */
-        .section{margin-bottom:24px}
-        .section h3{color:var(--orange);font-size:14px;margin-bottom:12px;cursor:pointer;user-select:none}
-        .section h3:hover{color:var(--accent)}
-        .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px 16px}
-        .param-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:13px}
-        .param-row label{color:var(--muted);font-size:12px;flex:1}
-        .param-row input, .param-row select{
-            width:90px;padding:4px 8px;background:var(--bg);color:var(--text);
-            border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:right;font-family:monospace
+        .param-card{
+            background:var(--surface);border:1px solid var(--border);
+            border-radius:10px;padding:20px 24px;margin-bottom:20px;
         }
-        .param-row input:focus{border-color:var(--accent);outline:none}
+        .param-card h3{
+            color:var(--accent);font-size:14px;font-weight:600;
+            margin-bottom:18px;display:flex;align-items:center;gap:8px;
+        }
+        .param-card h3 .badge{
+            font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500;
+        }
+        .badge-core{background:rgba(63,185,80,.12);color:var(--green)}
+        .badge-adv{background:rgba(139,148,158,.12);color:var(--muted)}
+        
+        /* slider rows */
+        .slider-row{
+            display:flex;align-items:center;gap:14px;
+            padding:10px 0;border-bottom:1px solid rgba(48,54,61,.4);
+        }
+        .slider-row:last-child{border-bottom:none}
+        .slider-row .label-wrap{min-width:140px;display:flex;flex-direction:column;gap:1px}
+        .slider-row label{color:var(--text);font-size:13px}
+        .slider-row .hint{color:var(--muted);font-size:10px}
+        .slider-row input[type=range]{flex:1;height:4px;accent-color:var(--accent);cursor:pointer}
+        .slider-row .slider-val{
+            min-width:48px;text-align:right;font-family:monospace;
+            font-size:13px;color:var(--accent);font-weight:600
+        }
+        
+        /* chip-style text inputs (no spinner) */
+        .chip-input{
+            width:72px;padding:4px 8px;
+            background:var(--bg);color:var(--text);
+            border:1px solid var(--border);border-radius:5px;
+            font-size:13px;text-align:center;font-family:monospace;
+            outline:none;transition:border-color .15s;
+        }
+        .chip-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(88,166,255,.1)}
+        
+        .range-pair{display:flex;align-items:center;gap:6px}
+        .adv-grid{display:block}
+        
         .param-row input[type=checkbox]{width:auto;cursor:pointer}
         
         .btn{
@@ -53,8 +84,8 @@
         .btn-danger{background:var(--red);color:#fff}
         
         .run-bar{
-            display:flex;align-items:center;gap:12px;padding:16px 0;flex-wrap:wrap;
-            border-bottom:1px solid var(--border);margin-bottom:20px;
+            display:flex;align-items:center;gap:12px;padding:18px 0 22px;flex-wrap:wrap;
+            border-bottom:1px solid var(--border);margin-bottom:28px;
         }
         .run-bar select{padding:6px 12px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:13px}
         

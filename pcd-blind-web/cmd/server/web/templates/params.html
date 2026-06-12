@@ -1,31 +1,91 @@
 {{define "params-body"}}
 <div id="tab-params">
-    <h2 style="margin-bottom:16px">⚙ 参数配置</h2>
+    <h2 style="margin-bottom:20px;font-size:20px">⚙ 参数配置</h2>
 
     {{template "run-bar" .}}
 
-    <div class="section">
-        <h3 onclick="this.nextElementSibling.classList.toggle('open')">▶ 管线参数</h3>
-        <div class="param-grid open">
-            <div class="param-row"><label>强度百分比 P%</label><input type="number" name="pct" value="{{printf "%.0f" .Params.Pct}}" step="1" min="1" max="100"></div>
-            <div class="param-row"><label>标靶球直径 (m)</label><input type="number" name="ball_diameter" value="{{printf "%.1f" .Params.BallDiameter}}" step="0.05"></div>
-            <div class="param-row"><label>Z 起始 (m)</label><input type="number" name="z_start" value="{{printf "%.1f" .Params.ZStart}}" step="0.5"></div>
-            <div class="param-row"><label>Z 步长 (m)</label><input type="number" name="z_step" value="{{printf "%.1f" .Params.ZStep}}" step="0.05"></div>
-            <div class="param-row"><label>Z 终止 (m)</label><input type="number" name="z_end" value="{{printf "%.1f" .Params.ZEnd}}" step="0.5"></div>
-            <div class="param-row"><label>聚类半径 (m)</label><input type="number" name="cluster_tolerance" value="{{printf "%.2f" .Params.ClusterTol}}" step="0.01"></div>
-            <div class="param-row"><label>最小簇点数</label><input type="number" name="min_cluster_size" value="{{printf "%d" .Params.MinClusterSize}}" step="5"></div>
-            <div class="param-row"><label>圆柱半径 (m)</label><input type="number" name="cyl_radius" value="{{printf "%.1f" .Params.CylRadius}}" step="0.05"></div>
-            <div class="param-row"><label>框向上范围 (m)</label><input type="number" name="box_dz_up" value="{{printf "%.1f" .Params.BoxDzUp}}" step="0.1"></div>
-            <div class="param-row"><label>框向下范围 (m)</label><input type="number" name="box_dz_dn" value="{{printf "%.1f" .Params.BoxDzDn}}" step="0.1"></div>
-            <div class="param-row"><label>地面 Z 百分比</label><input type="number" name="ground_z_pct" value="{{printf "%.2f" .Params.GroundZPct}}" step="0.01"></div>
-            <div class="param-row"><label>墙面法向 Z 阈值</label><input type="number" name="wall_nz_max" value="{{printf "%.1f" .Params.WallNzMax}}" step="0.05"></div>
-            <div class="param-row"><label>最大迭代次数</label><input type="number" name="max_iters" value="{{printf "%d" .Params.MaxIters}}" step="1"></div>
-            <div class="param-row"><label>Dxy 收敛阈值 (m)</label><input type="number" name="dxy_threshold" value="{{printf "%.2f" .Params.DxyThreshold}}" step="0.01"></div>
+    <div class="param-card">
+        <h3>🎯 核心参数 <span class="badge badge-core">必调</span></h3>
+
+        <!-- P% slider -->
+        <div class="slider-row">
+            <div class="label-wrap"><label>灵敏度 P%</label><span class="hint">越高检出越少越精准</span></div>
+            <input type="range" name="pct" min="50" max="100" value="{{printf "%.0f" .Params.Pct}}" oninput="this.nextElementSibling.textContent=this.value+'%'">
+            <span class="slider-val">{{printf "%.0f" .Params.Pct}}%</span>
+        </div>
+
+        <!-- Z range: two text inputs -->
+        <div class="slider-row">
+            <div class="label-wrap"><label>Z 搜索范围 (m)</label><span class="hint">从路面以上到隧道底面</span></div>
+            <div class="range-pair">
+                <input type="text" inputmode="decimal" name="z_start" value="{{printf "%.1f" .Params.ZStart}}" class="chip-input">
+                <span style="color:var(--muted)">～</span>
+                <input type="text" inputmode="decimal" name="z_end" value="{{printf "%.1f" .Params.ZEnd}}" class="chip-input">
+                <span style="color:var(--muted);font-size:11px">m</span>
+            </div>
+        </div>
+
+        <!-- Cluster tolerance slider -->
+        <div class="slider-row">
+            <div class="label-wrap"><label>聚类半径 (m)</label><span class="hint">多近的候选算同一个标靶</span></div>
+            <input type="range" name="cluster_tolerance" min="0.05" max="0.50" step="0.01" value="{{printf "%.2f" .Params.ClusterTol}}" oninput="this.nextElementSibling.textContent=parseFloat(this.value).toFixed(2)+'m'">
+            <span class="slider-val">{{printf "%.2f" .Params.ClusterTol}}m</span>
+        </div>
+
+        <!-- Cyl radius slider -->
+        <div class="slider-row">
+            <div class="label-wrap"><label>裁剪半径 (m)</label><span class="hint">包围球+三脚架的圆柱半径</span></div>
+            <input type="range" name="cyl_radius" min="0.2" max="1.0" step="0.05" value="{{printf "%.1f" .Params.CylRadius}}" oninput="this.nextElementSibling.textContent=parseFloat(this.value).toFixed(1)+'m'">
+            <span class="slider-val">{{printf "%.1f" .Params.CylRadius}}m</span>
         </div>
     </div>
 
-    <div class="section" style="margin-top:24px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--muted)">
-        门控过滤和评分权重请在 <b>🔍 检测结果</b> 页面用滑块实时调整
+    <div class="param-card" style="opacity:0.75">
+        <h3 style="cursor:pointer" onclick="var g=this.parentElement.querySelector('.adv-grid');g.style.display=g.style.display==='none'?'block':'none';this.querySelector('.arrow').textContent=g.style.display==='none'?'▸':'▾'">
+            <span class="arrow">▸</span> 高级参数 <span class="badge badge-adv">默认即可</span>
+        </h3>
+        <div class="adv-grid" style="display:none">
+            <div class="slider-row">
+                <label>Z 步长 (m)</label>
+                <input type="text" inputmode="decimal" name="z_step" value="{{printf "%.1f" .Params.ZStep}}" class="chip-input">
+            </div>
+            <div class="slider-row">
+                <label>最小簇点数</label>
+                <input type="text" inputmode="numeric" name="min_cluster_size" value="{{printf "%d" .Params.MinClusterSize}}" class="chip-input">
+            </div>
+            <div class="slider-row">
+                <label>球直径 (m)</label>
+                <input type="text" inputmode="decimal" name="ball_diameter" value="{{printf "%.1f" .Params.BallDiameter}}" class="chip-input">
+            </div>
+            <div class="slider-row">
+                <label>框向上 (m)</label>
+                <input type="text" inputmode="decimal" name="box_dz_up" value="{{printf "%.1f" .Params.BoxDzUp}}" class="chip-input">
+            </div>
+            <div class="slider-row">
+                <label>框向下 (m)</label>
+                <input type="text" inputmode="decimal" name="box_dz_dn" value="{{printf "%.1f" .Params.BoxDzDn}}" class="chip-input">
+            </div>
+            <div class="slider-row">
+                <label>地面 Z%</label>
+                <input type="text" inputmode="decimal" name="ground_z_pct" value="{{printf "%.2f" .Params.GroundZPct}}" class="chip-input">
+            </div>
+            <div class="slider-row">
+                <label>墙面法向阈值</label>
+                <input type="text" inputmode="decimal" name="wall_nz_max" value="{{printf "%.1f" .Params.WallNzMax}}" class="chip-input">
+            </div>
+            <div class="slider-row">
+                <label>收敛迭代次数</label>
+                <input type="text" inputmode="numeric" name="max_iters" value="{{printf "%d" .Params.MaxIters}}" class="chip-input">
+            </div>
+            <div class="slider-row">
+                <label>Dxy 收敛阈值 (m)</label>
+                <input type="text" inputmode="decimal" name="dxy_threshold" value="{{printf "%.2f" .Params.DxyThreshold}}" class="chip-input">
+            </div>
+        </div>
+    </div>
+
+    <div class="param-card" style="background:rgba(88,166,255,.04);border-color:rgba(88,166,255,.15);font-size:13px;color:var(--muted);text-align:center">
+        门控过滤和评分权重请在 <b style="color:var(--accent)">🔍 检测结果</b> 页面用滑块实时调整
     </div>
 </div>
 {{end}}
@@ -37,7 +97,7 @@
     </select>
     <button class="btn btn-run"
         hx-post="/runs"
-        hx-include="[name=source]"
+        hx-include="input, select"
         hx-target="#main"
         hx-swap="innerHTML"
         onclick="document.querySelectorAll('#tab-nav button').forEach(b=>b.classList.remove('active'));document.querySelector('#tab-nav button:nth-child(3)').classList.add('active')"

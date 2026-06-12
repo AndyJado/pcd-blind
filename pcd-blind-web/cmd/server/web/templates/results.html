@@ -48,30 +48,50 @@
     {{end}}
 
     {{if eq .RunStatus "done"}}
-    <div class="toolbar">
-        <div class="filter-row">
-            <div class="filter-item">
-                <label>Ratio ≥</label>
-                <span class="val">{{printf "%.1f" .FilterRatio}}</span>
-                <input type="range" name="ratio_min" min="1" max="20" step="0.5" value="{{printf "%.1f" .FilterRatio}}"
-                    hx-get="/tab/results?run={{.ActiveRunID}}" hx-trigger="change delay:200ms"
-                    hx-target="#tab-results-area" hx-swap="outerHTML" hx-include="closest .filter-row">
-            </div>
-            <div class="filter-item">
-                <label>Compact ≥</label>
-                <span class="val">{{printf "%.2f" .FilterCompact}}</span>
-                <input type="range" name="compact_min" min="0.5" max="1.0" step="0.01" value="{{printf "%.2f" .FilterCompact}}"
-                    hx-get="/tab/results?run={{.ActiveRunID}}" hx-trigger="change delay:200ms"
-                    hx-target="#tab-results-area" hx-swap="outerHTML" hx-include="closest .filter-row">
-            </div>
-            <div class="filter-item">
-                <label>Dxy ≤</label>
-                <span class="val">{{printf "%.2f" .FilterDxy}}</span>
-                <input type="range" name="dxy_max" min="0" max="0.5" step="0.01" value="{{printf "%.2f" .FilterDxy}}"
-                    hx-get="/tab/results?run={{.ActiveRunID}}" hx-trigger="change delay:200ms"
-                    hx-target="#tab-results-area" hx-swap="outerHTML" hx-include="closest .filter-row">
-            </div>
-            <div style="flex:1"></div>
+    <div class="param-card" style="padding:16px 24px">
+        <h3>🎚 过滤条件</h3>
+
+        <div class="slider-row">
+            <div class="label-wrap"><label>Ratio 下限</label><span class="hint">球面/三脚架强度比</span></div>
+            <input type="range" name="ratio_min" min="1" max="20" step="0.5" value="{{printf "%.1f" .FilterRatio}}"
+                hx-get="/tab/results?run={{.ActiveRunID}}" hx-trigger="change delay:200ms"
+                hx-target="#tab-results-area" hx-swap="outerHTML" hx-include="closest .param-card">
+            <span class="slider-val">{{printf "%.1f" .FilterRatio}}</span>
+        </div>
+
+        <div class="slider-row">
+            <div class="label-wrap"><label>Compact 下限</label><span class="hint">球面点空间紧密度</span></div>
+            <input type="range" name="compact_min" min="0.5" max="1.0" step="0.01" value="{{printf "%.2f" .FilterCompact}}"
+                hx-get="/tab/results?run={{.ActiveRunID}}" hx-trigger="change delay:200ms"
+                hx-target="#tab-results-area" hx-swap="outerHTML" hx-include="closest .param-card">
+            <span class="slider-val">{{printf "%.3f" .FilterCompact}}</span>
+        </div>
+
+        <div class="slider-row">
+            <div class="label-wrap"><label>Dxy 上限 (m)</label><span class="hint">球心与架心 XY 偏移</span></div>
+            <input type="range" name="dxy_max" min="0" max="0.5" step="0.01" value="{{printf "%.2f" .FilterDxy}}"
+                hx-get="/tab/results?run={{.ActiveRunID}}" hx-trigger="change delay:200ms"
+                hx-target="#tab-results-area" hx-swap="outerHTML" hx-include="closest .param-card">
+            <span class="slider-val">{{printf "%.3f" .FilterDxy}}m</span>
+        </div>
+
+        <div class="slider-row">
+            <div class="label-wrap"><label>Tripod 下限</label><span class="hint">三脚架 3 腿角分布质量</span></div>
+            <input type="range" name="tripod_min" min="0" max="1" step="0.05" value="{{printf "%.2f" .FilterTripod}}"
+                hx-get="/tab/results?run={{.ActiveRunID}}" hx-trigger="change delay:200ms"
+                hx-target="#tab-results-area" hx-swap="outerHTML" hx-include="closest .param-card">
+            <span class="slider-val">{{printf "%.2f" .FilterTripod}}</span>
+        </div>
+
+        <div class="slider-row" style="border-bottom:none">
+            <div class="label-wrap"><label>Ground 下限</label><span class="hint">地面点占比信号</span></div>
+            <input type="range" name="ground_min" min="0" max="1" step="0.01" value="{{printf "%.2f" .FilterGround}}"
+                hx-get="/tab/results?run={{.ActiveRunID}}" hx-trigger="change delay:200ms"
+                hx-target="#tab-results-area" hx-swap="outerHTML" hx-include="closest .param-card">
+            <span class="slider-val">{{printf "%.2f" .FilterGround}}</span>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
             <span id="approved-count" style="font-size:12px;color:var(--muted)"></span>
             {{if .HasApproved}}
             <a href="/runs/{{.ActiveRunID}}/export" class="btn btn-primary" download>📥 导出已确认</a>
@@ -79,7 +99,7 @@
         </div>
     </div>
 
-    <div id="gallery-area">
+    <div id="gallery-area" style="margin-top:20px">
         {{template "detection-gallery" .}}
     </div>
     {{end}}

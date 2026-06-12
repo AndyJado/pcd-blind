@@ -94,6 +94,8 @@ func (h *Handler) renderResultsTab(w http.ResponseWriter, r *http.Request, runID
 	ratioMin := p.RatioMin
 	compactMin := p.CompactMin
 	dxyMax := p.DxyMax
+	tripodMin := p.TripodMin
+	groundMin := p.GroundMin
 	if v := r.URL.Query().Get("ratio_min"); v != "" {
 		ratioMin = atof(v)
 	}
@@ -103,6 +105,12 @@ func (h *Handler) renderResultsTab(w http.ResponseWriter, r *http.Request, runID
 	if v := r.URL.Query().Get("dxy_max"); v != "" {
 		dxyMax = atof(v)
 	}
+	if v := r.URL.Query().Get("tripod_min"); v != "" {
+		tripodMin = atof(v)
+	}
+	if v := r.URL.Query().Get("ground_min"); v != "" {
+		groundMin = atof(v)
+	}
 
 	// Build detection list
 	var detections []DetectionCard
@@ -110,7 +118,7 @@ func (h *Handler) renderResultsTab(w http.ResponseWriter, r *http.Request, runID
 
 	if run.Status == "done" {
 		runDir := filepath.Join(h.Store.DataDir(), "output", runID)
-		candidates, _ := loadCandidatesForDisplay(runDir, ratioMin, compactMin, dxyMax, p)
+		candidates, _ := loadCandidatesForDisplay(runDir, ratioMin, compactMin, dxyMax, tripodMin, groundMin, p)
 		selections := h.Store.GetSelection(runID)
 		approvedSet := make(map[int]bool)
 		for _, s := range selections {
@@ -180,6 +188,8 @@ func (h *Handler) renderResultsTab(w http.ResponseWriter, r *http.Request, runID
 		"FilterRatio":   ratioMin,
 		"FilterCompact": compactMin,
 		"FilterDxy":     dxyMax,
+		"FilterTripod":  tripodMin,
+		"FilterGround":  groundMin,
 		"HasApproved":   hasApproved,
 		"ApprovedSet":   buildApprovedSet(selections),
 	}
